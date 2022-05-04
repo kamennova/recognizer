@@ -1,7 +1,7 @@
 package com.kamennova.lala;
 
-import com.kamennova.lala.LaLaLearn.ChordSeqFull;
-import com.kamennova.lala.LaLaLearn.RNote;
+import com.kamennova.lala.LaLa.ChordSeqFull;
+import com.kamennova.lala.LaLa.RNote;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
@@ -31,6 +31,7 @@ public class MidiParser {
 
             long lastTick = 0; // current tick index
 
+//            System.out.println("track" + );
             for (int i = 0; i < track.size(); i++) {
                 MidiEvent event = track.get(i);
 
@@ -59,7 +60,9 @@ public class MidiParser {
                     int dur = Math.toIntExact(currTick - lastTick);
                     List<RNote> chord = sameTickNotes.stream().map(n -> new RNote(n, dur))
                             .collect(Collectors.toList());
-                    notes.chords.add(chord);
+                    if (chord.size() > 0 ){
+                        notes.chords.add(chord);
+                    }
                     sameTickNotes = new ArrayList<>();
                     lastTick = currTick;
                 }
@@ -67,7 +70,9 @@ public class MidiParser {
                 sameTickNotes.add(key);
             }
 
-            tracks.add(notes);
+            if (notes.chords.size() > 0) {
+                tracks.add(notes);
+            }
         }
 
         return tracks;
