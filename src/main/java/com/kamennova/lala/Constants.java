@@ -14,7 +14,7 @@ public class Constants {
             65, 69, 69, 65, 64, 67, 67, 64, 62, 64, 65, 60, 60,
             65, 69, 69, 65, 64, 67, 67, 64, 62, 64, 65, 60, 60));
 
-    List<LaLa.RNote> timedGeese = new ArrayList<>(Arrays.asList(
+    List<LaLaLearn.RNote> timedGeese = new ArrayList<>(Arrays.asList(
             n(65, 4), n(64, 4), n(62, 4), n(60, 4), n(67, 8), n(67, 8),
             n(65, 4), n(64, 4), n(62, 4), n(60, 4), n(67, 8), n(67, 8),
             n(65, 4), n(69, 4), n(69, 4), n(65, 4), n(64, 4), n(67, 4), n(67, 4), n(64, 4),
@@ -117,7 +117,7 @@ public class Constants {
         }
     }
 
-    private LaLa.RNote n(int interval, int duration) {
-        return new LaLa.RNote(interval, duration);
+    private LaLaLearn.RNote n(int interval, int duration) {
+        return new LaLaLearn.RNote(interval, duration);
     }
 }
