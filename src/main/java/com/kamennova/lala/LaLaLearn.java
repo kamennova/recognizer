@@ -1,21 +1,22 @@
 package com.kamennova.lala;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-public class LaLaLearn {
+public class LaLaLearn extends LaLa{
     private short key;
     private short keyPrecision = 0;
     private String pieceName;
 
-    private HashMap<List<Integer>, Integer> store3 = new HashMap<>();
-    private HashMap<List<Integer>, Integer> store4 = new HashMap<>();
-    private List<List<Integer>> rhythmStore = new ArrayList<>();
+    public String getPieceName() {
+        return this.pieceName;
+    }
 
-    public LaLaLearn(String pieceName) {
+    private HashMap<List<Integer>, Integer> store4 = new HashMap<>();
+
+    public LaLaLearn(String pieceName, Persistence persistence) {
+        super(persistence);
         this.pieceName = pieceName;
     }
 
@@ -33,52 +34,39 @@ public class LaLaLearn {
         // todo
     }
 
-    public void processInput(LaLa.ChordSeqFull notes, List<Integer> r) throws Exception {
-        List<LaLa.NoteSeqFull> sequences3 = getSequences(notes, 3);
-        log("seq", sequences3.get(0));
-        log("size", sequences3.size());
-        storeSequences(sequences3);
-        storeRhythm(r);
+    public int process(LaLa.ChordSeqFull notes) throws Exception {
+        super.processInput(notes);
+        return 0;
     }
-
-    public static List<LaLa.NoteSeqFull> getSequences(LaLa.ChordSeqFull track, Integer size) {
-                List<LaLa.NoteSeqFull> seqs = new ArrayList<>();
-        List<LaLa.RNote> notes = track.chords.stream()
-                .map(chord -> chord.stream().max(Comparator.comparing(n -> n.interval)).get())
-                .collect(Collectors.toList());
-
-        for (int i = 0; i < notes.size() - size; i++) {
-            LaLa.NoteSeqFull seq = new LaLa.NoteSeqFull(notes.subList(i, i + size));
-            log("s", seq.notes.stream().map(n -> n.interval).collect(Collectors.toList()));
-            seqs.add(seq);
-        }
-
-        return seqs;
-    }
-
-
-    private void storeSequences(List<LaLa.NoteSeqFull> seqs) {
-        seqs.stream().map(seq ->seq.notes.stream().map(n-> Math.toIntExact(n.interval)).collect(Collectors.toList()))
-                .forEach(notes -> store3.put(notes, store3.getOrDefault(notes, 0) + 1));
-
-        log("all", store3.entrySet().stream().sorted(Comparator.comparing(se -> se.getValue())).collect(Collectors.toList()));
-    }
-
-    private void storeRhythm(List<Integer> r) {
-        rhythmStore.add(r);
-    }
-
 
     public void finishLearn() {
-        log("all", store3.entrySet());
+        Stream
+                <Map.Entry<List<Integer>, Integer>> top =
+                store3.entrySet().stream().filter(entry -> entry.getValue() > 1)
+                        .sorted(java.util.Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                        .limit(5);
+
+        top.forEach(entry -> {
+            this.persistence.addPattern(this.pieceName, entry.getKey());
+        });
 //        List<List<Integer>> motives = getMotives();
 //        persistMotives(motives, key);
     }
 
+    public void clear() {
+        pieceName = null;
+        store3 = new HashMap<>();
+        store4 = new HashMap<>();
+        rhythmStore = new ArrayList<>();
+    }
+
+    public void setNewPiece(String pieceName) {
+//        this.clear();
+        this.pieceName = pieceName;
+    }
 
     private static void log(String str, Object obj) {
         System.out.println(str);
         System.out.println(obj);
     }
-
 }
