@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+    body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+    }
+
+    .flex {
+    display: flex;
+    }
+
+
+    .switcher {
+        display: flex;
+       margin-bottom: 40px;
+    }
+
+    .switcher-btn {
+        display: block;
+        padding: 0 28px;
+        border: 3px solid grey;
+        cursor: pointer;
+        height: 34px;
+    }
+
+    .switcher-btn .icon {
+        width: 26px;
+    }
+
+
+    .switcher-btn.active:first-of-type {
+        box-shadow: 0 0 12px -2px #ffa6a6;
+    }
+
+    .switcher-btn.active:last-of-type {
+        box-shadow: 0 0 12px -2px #8ad4e4;
+    }
+
+    .switcher-btn:first-of-type {
+        background: #ffdfe5;
+        border-color: pink;
+        border-top-left-radius: 60px;
+        border-bottom-left-radius: 60px;
+    }
+
+    .switcher-btn:last-of-type {
+        border-top-right-radius: 60px;
+        border-bottom-right-radius: 60px;
+        margin-left: -3px;
+        background: #dcf6ff;
+        border-color: #acdfff;
+    }
+
+.hidden {
+    display: none;
+}
+
+    .switcher-btn {
+        height: 120px;
+        width: 160px;
+        font-size: 18px;
+    <!--    border-radius: 50%;-->
+    }
+
+        .popup {
+        position: absolute;
+        left: 0;
+        top: 170px;
+        right: 0;
+        margin: 0 auto;
+        background: white;
+        width: 400px;
+        padding: 40px 20px;
+        border: 1px solid blue;
+
+        }
+
+        .audio-input {
+            width: 50%
+        }
+
+        .audio-input .col {
+            padding: 15px 20px;
+        }
+
+        .audio-input .col:first-of-type {
+
+            width: 50%;
+            border-right: 1px solid black
+
+        }
+
+
+
+    </style>
+</head>
+<body>
+
+<h1>Music practice</h1>
+
+<div class="switcher">
+    <button class="switcher-btn" id="btn-learn">Learn</button>
+    <button class="switcher-btn" id="btn-recognize">Recognize</button>
+</div>
+
+<section class="audio-input flex">
+    <div class="col recorder-input">
+        <span class="input-label">Start playing</span>
+
+
+        <div class="session-buttons">
+            <button class="btn btn-start" id="btn-start">
+                <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48">
+                    <path d="M19.15 18.25V29.75Q19.15 30.65 19.925 31.1Q20.7 31.55 21.45 31.05L30.5 25.25Q31.2 24.8 31.2 24Q31.2 23.2 30.5 22.75L21.45 16.95Q20.7 16.45 19.925 16.9Q19.15 17.35 19.15 18.25ZM24 44Q19.9 44 16.25 42.425Q12.6 40.85 9.875 38.125Q7.15 35.4 5.575 31.75Q4 28.1 4 24Q4 19.9 5.575 16.25Q7.15 12.6 9.875 9.875Q12.6 7.15 16.25 5.575Q19.9 4 24 4Q28.1 4 31.75 5.575Q35.4 7.15 38.125 9.875Q40.85 12.6 42.425 16.25Q44 19.9 44 24Q44 28.1 42.425 31.75Q40.85 35.4 38.125 38.125Q35.4 40.85 31.75 42.425Q28.1 44 24 44ZM24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24ZM24 41Q31 41 36 36Q41 31 41 24Q41 17 36 12Q31 7 24 7Q17 7 12 12Q7 17 7 24Q7 31 12 36Q17 41 24 41Z"></path>
+                </svg>
+            </button>
+            <button class="btn btn-pause" id="btn-pause">
+                <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48">
+                    <path d="M29.25 38Q28 38 27.125 37.125Q26.25 36.25 26.25 35V13Q26.25 11.75 27.125 10.875Q28 10 29.25 10H35Q36.25 10 37.125 10.875Q38 11.75 38 13V35Q38 36.25 37.125 37.125Q36.25 38 35 38ZM13 38Q11.75 38 10.875 37.125Q10 36.25 10 35V13Q10 11.75 10.875 10.875Q11.75 10 13 10H18.75Q20 10 20.875 10.875Q21.75 11.75 21.75 13V35Q21.75 36.25 20.875 37.125Q20 38 18.75 38ZM29.25 35H35V13H29.25ZM13 35H18.75V13H13ZM13 13V35ZM29.25 13V35Z"></path>
+                </svg>
+            </button>
+            <button class="btn btn-stop" id="btn-stop">
+                <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48">
+                    <path d="M24 44Q19.75 44 16.1 42.475Q12.45 40.95 9.75 38.25Q7.05 35.55 5.525 31.9Q4 28.25 4 24Q4 19.8 5.525 16.15Q7.05 12.5 9.75 9.8Q12.45 7.1 16.1 5.55Q19.75 4 24 4Q28.2 4 31.85 5.55Q35.5 7.1 38.2 9.8Q40.9 12.5 42.45 16.15Q44 19.8 44 24Q44 28.25 42.45 31.9Q40.9 35.55 38.2 38.25Q35.5 40.95 31.85 42.475Q28.2 44 24 44ZM24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24ZM24 41Q31.25 41 36.125 36.125Q41 31.25 41 24Q41 16.75 36.125 11.875Q31.25 7 24 7Q16.75 7 11.875 11.875Q7 16.75 7 24Q7 31.25 11.875 36.125Q16.75 41 24 41ZM18 31.5H30Q30.65 31.5 31.075 31.075Q31.5 30.65 31.5 30V18Q31.5 17.35 31.075 16.925Q30.65 16.5 30 16.5H18Q17.35 16.5 16.925 16.925Q16.5 17.35 16.5 18V30Q16.5 30.65 16.925 31.075Q17.35 31.5 18 31.5Z"></path>
+                </svg>
+            </button>
+        </div>
+
+    </div>
+
+    <div class="col">
+        <span>Upload recording</span>
+        <form enctype="multipart/form-data" action="/upload/image" method="post">
+            <input id="image-file" type="file"/>
+        </form>
+        <button id="recording-send">Submit</button>
+    </div>
+</section>
+
+<div class="popup hidden">
+    <span id="learn-popup-text"></span>
+    <form enctype="multipart/form-data" method="post">
+        <input id="piece-name" type="text"/>
+    </form>
+    <div class="popup-buttons">
+        <button id="learn-cancel">
+            Cancel
+        </button>
+        <button id="learn-proceed">
+            GO
+        </button>
+    </div>
+</div>
+
+<div class="hidden">
+    <h3>Recordings</h3>
+    <ol id="recordingsList"></ol>
+</div>
+
+</body>
+<script src="../recorder-lib/web-audio-recorder-js/lib-minified/WebAudioRecorder.min.js"></script>
+<script src="../js/script.js"></script>
+<script src="../js/recorder.js"></script>
+</html>

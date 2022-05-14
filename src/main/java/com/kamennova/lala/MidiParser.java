@@ -1,7 +1,7 @@
 package com.kamennova.lala;
 
-import com.kamennova.lala.LaLa.ChordSeqFull;
-import com.kamennova.lala.LaLa.RNote;
+import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.RNote;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;

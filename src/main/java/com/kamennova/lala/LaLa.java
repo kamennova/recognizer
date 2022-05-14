@@ -1,8 +1,12 @@
 package com.kamennova.lala;
 
+import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.NoteSeqFull;
+import com.kamennova.lala.common.RNote;
+import com.kamennova.lala.persistence.Persistence;
+
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class LaLa {
@@ -10,34 +14,12 @@ public class LaLa {
         this.persistence = persistence;
     }
 
-    public static void main(String[] args) throws Exception {
-        // learn
-        learnMode("Sonat111");
-//        recognitionMode();
-    }
-
     protected Persistence persistence;
     protected HashMap<List<Integer>, Integer> store3 = new HashMap<>();
     protected List<List<Integer>> rhythmStore = new ArrayList<>();
 
-    private void onProcess(String inputPath) throws Exception {
-        List<LaLa.ChordSeqFull> tracks = MidiParser.getNotesFromMidi(inputPath);
-        LaLa.ChordSeqFull melodyTrack = tracks.get(1);
-        System.out.println(melodyTrack.chords.get(1));
-
-        Tonality t = getTonality(melodyTrack.chords);
-        LaLa.ChordSeqFull normalized = normalize(melodyTrack);
-
-        System.out.println(melodyTrack.chords.stream().map(ch -> ch.stream().map(
-                n -> Constants.NOTE.getNoteName(n.interval) + " " + n.duration)
-                .collect(Collectors.toList())).collect(Collectors.toList()));
-
-    }
-
-
-    public static ChordSeqFull getNormalizedTrack(String inputPath) throws Exception {
-        List<LaLa.ChordSeqFull> tracks = MidiParser.getNotesFromMidi(inputPath);
-        LaLa.ChordSeqFull melodyTrack = getMelodyTrack(tracks);
+    public static ChordSeqFull getNormalizedTrack(List<ChordSeqFull> tracks) {
+        ChordSeqFull melodyTrack = getMelodyTrack(tracks);
         log("sizer", tracks.size());
 //        log("track1", tracks.get(0).chords.get(0).get(0).interval);
 //        log("track2", tracks.get(1).chords.get(0).get(0).interval);
@@ -64,14 +46,14 @@ public class LaLa {
         return highest;
     }
 
-    public void processInput(LaLa.ChordSeqFull notes) throws Exception {
-        List<LaLa.NoteSeqFull> sequences3 = LaLa.getSequences(notes, 3);
+    public void processInput(ChordSeqFull notes) {
+        List<NoteSeqFull> sequences3 = LaLa.getSequences(notes, 3);
         storeSequences(sequences3);
         List<Integer> rhythm = LaLa.getRhythm(notes);
         storeRhythm(rhythm);
     }
 
-    private void storeSequences(List<LaLa.NoteSeqFull> seqs) {
+    private void storeSequences(List<NoteSeqFull> seqs) {
         seqs.stream().map(seq -> seq.notes.stream().map(n -> Math.toIntExact(n.interval)).collect(Collectors.toList()))
                 .forEach(notes -> store3.put(notes, store3.getOrDefault(notes, 0) + 1));
 
@@ -82,90 +64,8 @@ public class LaLa {
         rhythmStore.add(r);
     }
 
-    private static void learnMode(String pieceName) throws Exception {
-//        LaLaLearn l = new LaLaLearn(pieceName);
-
-//        learnModeOnInput(l, "src/main/resources/lmlyd.mid");
-//        learnModeOnInput(l,"src/main/resources/Path1.mid");
-//        learnModeOnInput(l, "src/main/resources/Always1.mid");
-//        l.finishLearn();
-    }
-
-    private static void learnModeOnInput(LaLaLearn l, String inputPath) throws Exception {
-        ChordSeqFull normalized = getNormalizedTrack(inputPath);
-        List<Integer> rhythm = getRhythm(normalized);
-        printRhythm(rhythm);
-//        l.processInput(normalized, rhythm);
-    }
-
-    private static void recognitionMode() throws Exception {
-//        LaLaRecognize recognize = new LaLaRecognize();
-//        recognitionModeOnInput(recognize, "src/main/resources/Path1.mid");
-//        recognitionModeOnInput(recognize, "src/main/resources/Always1.mid");
-    }
-
-    private static void recognitionModeOnInput(LaLaRecognize r, String inputPath) throws Exception {
-        ChordSeqFull normalized = getNormalizedTrack(inputPath);
-        r.processInput(normalized);
-
-    }
-
-    public static class ChordSeq {
-        public List<List<Integer>> chords;
-
-        public ChordSeq(List<List<Integer>> ch) {
-            this.chords = ch;
-        }
-    }
-
-    public static class ChordSeqFull {
-        public List<List<RNote>> chords;
-
-        public ChordSeqFull(List<List<RNote>> ch) {
-            this.chords = ch;
-        }
-
-        public List<List<RNote>> get() {
-            return chords;
-        }
-    }
-
-    public static class NoteSeq {
-        public List<Integer> notes;
-
-        public NoteSeq(List<Integer> notes) {
-            this.notes = notes;
-        }
-
-        public List<Integer> get() {
-            return notes;
-        }
-    }
-
-    public static class NoteSeqFull {
-        public List<RNote> notes;
-
-        public NoteSeqFull(List<RNote> notes) {
-            this.notes = notes;
-        }
-
-        public List<RNote> get() {
-            return notes;
-        }
-    }
-
     private static void printRhythm(List<Integer> r) {
         log("rhythm", r.stream().map(("-")::repeat).collect(Collectors.joining(" ")));
-    }
-
-    public static class RNote {
-        public short duration;
-        public short interval;
-
-        public RNote(int interval, int duration) {
-            this.interval = (short) interval;
-            this.duration = (short) duration;
-        }
     }
 
     private static Tonality getTonality(List<List<RNote>> notes) {
@@ -222,27 +122,10 @@ public class LaLa {
 
         List<NoteSeqFull> prevs = combineNotesStep(chords, chordIndex + 1);
 
-
         return currChord.stream().flatMap(note -> prevs.stream().map(prSeq -> {
             List<RNote> conc = Stream.concat(Stream.of(note), prSeq.get().stream()).collect(Collectors.toList());
             return new NoteSeqFull(conc);
         })).collect(Collectors.toList());
-    }
-
-    private static <T> Stream<List<T>> batches(List<T> source, int length) {
-        if (length <= 0)
-            throw new IllegalArgumentException("length = " + length);
-        int size = source.size();
-        if (size <= 0)
-            return Stream.empty();
-        int fullChunks = (size - 1) / length;
-//        log("full chunks", fullChunks);
-        return IntStream.range(0, fullChunks + 1).mapToObj(
-                n -> source.subList(n * length, n == fullChunks ? size : (n + 1) * length));
-    }
-
-    private void findSimilar(List<Integer> notes) {
-
     }
 
     private String formatInts(List<Integer> ints) {
@@ -264,21 +147,23 @@ public class LaLa {
         return track;
     }
 
-    public static List<LaLa.NoteSeqFull> getSequences(LaLa.ChordSeqFull track, Integer size) {
-        List<LaLa.NoteSeqFull> seqs = new ArrayList<>();
-        List<LaLa.RNote> notes = track.chords.stream()
+    public static List<NoteSeqFull> getSequences(ChordSeqFull track, Integer size) { // todo make one without shift to save???
+        List<NoteSeqFull> seqs = new ArrayList<>();
+        List<RNote> notes = track.chords.stream()
                 .map(chord -> chord.stream().max(Comparator.comparing(n -> n.interval)).get())
                 .collect(Collectors.toList());
 
         for (int i = 0; i < notes.size() - size; i++) {
-            LaLa.NoteSeqFull seq = new LaLa.NoteSeqFull(notes.subList(i, i + size));
+            NoteSeqFull seq = new NoteSeqFull(notes.subList(i, i + size));
             log("s", seq.notes.stream().map(n -> n.interval).collect(Collectors.toList()));
-            seqs.add(seq);
+
+            if (!(seq.notes.get(0).interval == seq.notes.get(1).interval && seq.notes.get(1).interval == seq.notes.get(2).interval)) {
+                seqs.add(seq);
+            }
         }
 
         return seqs;
     }
-
 
     public static List<Integer> getRhythm(ChordSeqFull seq) {
         return seq.chords.stream().map(ch -> ch.get(0).duration / 55).collect(Collectors.toList());

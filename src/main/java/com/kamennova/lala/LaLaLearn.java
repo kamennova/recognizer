@@ -1,10 +1,12 @@
 package com.kamennova.lala;
 
+import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.persistence.Persistence;
+
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class LaLaLearn extends LaLa{
+public class LaLaLearn extends LaLa {
     private short key;
     private short keyPrecision = 0;
     private String pieceName;
@@ -34,7 +36,7 @@ public class LaLaLearn extends LaLa{
         // todo
     }
 
-    public int process(LaLa.ChordSeqFull notes) throws Exception {
+    public int process(ChordSeqFull notes) throws Exception {
         super.processInput(notes);
         return 0;
     }
@@ -46,6 +48,7 @@ public class LaLaLearn extends LaLa{
                         .sorted(java.util.Map.Entry.comparingByValue(Comparator.reverseOrder()))
                         .limit(5);
 
+        this.persistence.addPiece(this.pieceName);
         top.forEach(entry -> {
             this.persistence.addPattern(this.pieceName, entry.getKey());
         });

@@ -1,5 +1,7 @@
 package com.kamennova.lala;
 
+import com.kamennova.lala.common.RNote;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,30 +9,30 @@ import java.util.List;
 public class TimedLala {
     public static void main(String[] args) {
         // goose
-        List<LaLa.RNote> melody1 = List.of(
-                new LaLa.RNote(5, 4),
-                new LaLa.RNote(4, 4),
-                new LaLa.RNote(2, 4),
-                new LaLa.RNote(0, 4),
+        List<RNote> melody1 = List.of(
+                new RNote(5, 4),
+                new RNote(4, 4),
+                new RNote(2, 4),
+                new RNote(0, 4),
 
-                new LaLa.RNote(7, 8),
-                new LaLa.RNote(7, 8));
+                new RNote(7, 8),
+                new RNote(7, 8));
 
 
-        List<LaLa.RNote> melody2 = List.of(
-                new LaLa.RNote(5, 4),
-                new LaLa.RNote(4, 4),
-                new LaLa.RNote(2, 4),
-                new LaLa.RNote(0, 4),
+        List<RNote> melody2 = List.of(
+                new RNote(5, 4),
+                new RNote(4, 4),
+                new RNote(2, 4),
+                new RNote(0, 4),
 
-                new LaLa.RNote(7, 8),
-                new LaLa.RNote(7, 8));
+                new RNote(7, 8),
+                new RNote(7, 8));
 
     }
     private class NoteSeq{
-        public List<LaLa.RNote> notes;
+        public List<RNote> notes;
 
-        NoteSeq(List<LaLa.RNote> notes) {
+        NoteSeq(List<RNote> notes) {
             this.notes = notes;
         }
 
@@ -57,7 +59,7 @@ public class TimedLala {
         }
     }
 
-    private List<List<NoteSeq>> getTimeSequences(List<LaLa.RNote> notes, int totalDuration, int batchDuration) {
+    private List<List<NoteSeq>> getTimeSequences(List<RNote> notes, int totalDuration, int batchDuration) {
         int startsNum = totalDuration / batchDuration;
 
         List<List<NoteSeq>> sequences = new ArrayList<>();
@@ -72,15 +74,15 @@ public class TimedLala {
     }
 
 
-    private List<NoteSeq> timeBatches(List<LaLa.RNote> source, int duration) {
+    private List<NoteSeq> timeBatches(List<RNote> source, int duration) {
         List<NoteSeq> res = new ArrayList<>();
-        List<LaLa.RNote> currSeq = new ArrayList<>();
+        List<RNote> currSeq = new ArrayList<>();
         int currDuration = 0;
 
-        for (LaLa.RNote currNote : source) {
+        for (RNote currNote : source) {
             int durationLeft = duration - currDuration;
             if (currNote.duration >= durationLeft) {
-                currSeq.add(new LaLa.RNote(currNote.interval, durationLeft));
+                currSeq.add(new RNote(currNote.interval, durationLeft));
                 res.add(new NoteSeq(currSeq));
                 currSeq = new ArrayList<>();
                 currDuration = 0;
