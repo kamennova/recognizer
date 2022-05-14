@@ -1,7 +1,6 @@
 package com.kamennova.lala.endpoint;
 
-import com.kamennova.lala.LaLa;
-import com.kamennova.lala.LaLaLearn;
+import com.kamennova.lala.Learner;
 import com.kamennova.lala.common.ChordSeqFull;
 import com.kamennova.lala.persistence.Persistence;
 import com.sun.net.httpserver.HttpExchange;
@@ -11,7 +10,7 @@ import java.io.IOException;
 import java.util.Map;
 
 public class LearnHandler extends RequestHandler implements HttpHandler {
-    LaLaLearn currLearn;
+    Learner currLearn;
     String currPieceName;
     private static final String PIECE_NAME_PROPERTY = "pieceName";
 
@@ -48,7 +47,7 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         try {
             String pathToFile = downloadRecording(httpExchange.getRequestBody());
             ChordSeqFull track = getTrackFromAudioInput(pathToFile); // todo single method?
-            LaLaLearn learnEntity = getLearnEntity(currPieceName);
+            Learner learnEntity = getLearnEntity(currPieceName);
 
             int learnLevel = learnEntity.process(track);
             learnEntity.finishLearn(); // todo remove
@@ -60,10 +59,10 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         }
     }
 
-    private LaLaLearn getLearnEntity(String pieceName) {
+    private Learner getLearnEntity(String pieceName) {
         if (this.currLearn == null) {
             System.out.println("create");
-            this.currLearn = new LaLaLearn(pieceName, persistence);
+            this.currLearn = new Learner(pieceName, persistence);
         } else if (!this.currLearn.getPieceName().equals(pieceName)) {
             System.out.println("new");
             this.currLearn.finishLearn();

@@ -1,7 +1,6 @@
 package com.kamennova.lala.endpoint;
 
-import com.kamennova.lala.LaLa;
-import com.kamennova.lala.LaLaRecognize;
+import com.kamennova.lala.Recognizer;
 import com.kamennova.lala.common.ChordSeqFull;
 import com.kamennova.lala.persistence.Persistence;
 import com.sun.net.httpserver.HttpExchange;
@@ -10,14 +9,14 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 
 public class RecognizeHandler extends RequestHandler implements HttpHandler {
-    LaLaRecognize recognizer;
-    LaLaRecognize prevRecognizer;
+    Recognizer recognizer;
+    Recognizer prevRecognizer;
 
     RecognizeHandler(Persistence p) {
         super(p);
     }
 
-    private String resultToJson(LaLaRecognize.Result result) {
+    private String resultToJson(Recognizer.Result result) {
         String resString = result.pieceName == null ? "null" :
                 "{\"name\": \"" + result.pieceName + "\", \"precision\": " + result.precision + "}";
         String successString = result.precision > 0 ? "\"true\"" : "\"false\"";
@@ -54,7 +53,7 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
                 ChordSeqFull track = getTrackFromAudioInput(pathToFile);
                 updateRecognizeEntity(false);
 
-                LaLaRecognize.Result result = this.recognizer.process(track);
+                Recognizer.Result result = this.recognizer.process(track);
                 handleResponse(httpExchange, resultToJson(result));
             } catch (Exception e) {
                 e.printStackTrace();
@@ -67,10 +66,10 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
     private void updateRecognizeEntity(boolean mightNeedNew) {
         if (this.recognizer == null) {
             System.out.println("create recognizer");
-            this.recognizer = new LaLaRecognize(persistence);
+            this.recognizer = new Recognizer(persistence);
         } else if (mightNeedNew) {
             prevRecognizer = this.recognizer;
-            this.recognizer = new LaLaRecognize(persistence);
+            this.recognizer = new Recognizer(persistence);
         }
     }
 

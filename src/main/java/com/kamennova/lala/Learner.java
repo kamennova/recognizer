@@ -6,7 +6,7 @@ import com.kamennova.lala.persistence.Persistence;
 import java.util.*;
 import java.util.stream.Stream;
 
-public class LaLaLearn extends LaLa {
+public class Learner extends LaLa {
     private short key;
     private short keyPrecision = 0;
     private String pieceName;
@@ -17,7 +17,7 @@ public class LaLaLearn extends LaLa {
 
     private HashMap<List<Integer>, Integer> store4 = new HashMap<>();
 
-    public LaLaLearn(String pieceName, Persistence persistence) {
+    public Learner(String pieceName, Persistence persistence) {
         super(persistence);
         this.pieceName = pieceName;
     }

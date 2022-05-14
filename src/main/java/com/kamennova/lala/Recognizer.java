@@ -6,7 +6,7 @@ import com.kamennova.lala.persistence.Persistence;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class LaLaRecognize extends LaLa {
+public class Recognizer extends LaLa {
     private static final Result NO_RESULT = new Result(null, 0F);
 
     public Result process(ChordSeqFull track) {
@@ -40,7 +40,7 @@ public class LaLaRecognize extends LaLa {
         return new Result(piece.getKey(), (float) piece.getValue() + 0.0F);
     }
 
-    public LaLaRecognize(Persistence persistence) {
+    public Recognizer(Persistence persistence) {
         super(persistence);
     }
 

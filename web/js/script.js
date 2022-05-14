@@ -21,7 +21,6 @@ const sendStartLearning = () => {
 }
 
 const sendLearnRecording = (blob) => {
-console.log(blob)
     return fetch(`${API_URL_BASE}/recognize`, {
         method: "POST",
         body: blob,
@@ -78,11 +77,9 @@ document.getElementById("learn-proceed").addEventListener("click", () => {
 });
 
 const sendRecording = (blob) => {
-console.log("here111")
 if (STATE.currMode === MODES.LEARN) {
         sendLearnRecording(blob);
     } else {
-    console.log("here")
         sendRecognizeRecording(blob);
     }
 }

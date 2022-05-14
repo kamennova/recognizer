@@ -53,7 +53,7 @@ public class RequestHandler {
 
     protected ChordSeqFull getTrackFromAudioInput(String pathToRecording) {
         try {
-            Mp3ToMidiTranscriber.transcribeToMidi(pathToRecording);
+//            Mp3ToMidiTranscriber.transcribeToMidi(pathToRecording);
             String inputPath = "src/main/resources/Path1.mid";
             List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(inputPath);
             return LaLa.getNormalizedTrack(tracks);

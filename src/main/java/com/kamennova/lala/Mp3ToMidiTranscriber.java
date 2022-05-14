@@ -6,27 +6,31 @@ import java.io.InputStreamReader;
 
 // wrapper class for omnizart
 public class Mp3ToMidiTranscriber {
-    public static void transcribeToMidi2(String pathToFile) throws  IOException, InterruptedException {
-        String command = "ping -c 3 www.google.com";
+    public static boolean transcribeToMidi(String pathToFile) throws IOException, InterruptedException {
+        String command = "omnizart music transcribe " + pathToFile + " -o src/main/resources/upload.mid"; // todo out
 
         Process proc = null;
-            proc = Runtime.getRuntime().exec(command);
-        // Read the output
+        proc = Runtime.getRuntime().exec(command);
 
-        BufferedReader reader =
-                new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
 
         String line = "";
+//        reader.
         while ((line = reader.readLine()) != null) {
             System.out.print(line + "\n");
         }
 
-        proc.waitFor();
+
+        System.out.println(new String(proc.getErrorStream().readAllBytes()));
+        return proc.waitFor() == 0;
     }
 
 
-    public static void transcribeToMidi(String pathToFile) throws IOException, InterruptedException {
-
+    public static void main(String[] args) {
+        try {
+            transcribeToMidi("Downloads/record2.mp3");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-
 }
