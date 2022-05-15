@@ -1,6 +1,7 @@
 package com.kamennova.lala;
 
 import com.kamennova.lala.common.RNote;
+import com.kamennova.lala.common.Tonality;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -3,6 +3,7 @@ package com.kamennova.lala;
 import com.kamennova.lala.common.ChordSeqFull;
 import com.kamennova.lala.common.NoteSeqFull;
 import com.kamennova.lala.common.RNote;
+import com.kamennova.lala.common.Tonality;
 import com.kamennova.lala.persistence.Persistence;
 
 import java.util.*;
@@ -18,13 +19,13 @@ public class LaLa {
     protected HashMap<List<Integer>, Integer> store3 = new HashMap<>();
     protected List<List<Integer>> rhythmStore = new ArrayList<>();
 
-    public static ChordSeqFull getNormalizedTrack(List<ChordSeqFull> tracks) {
+    public static ChordSeqFull getNormalizedMelodyTrack(List<ChordSeqFull> tracks) { // todo no separate func??
         ChordSeqFull melodyTrack = getMelodyTrack(tracks);
         log("sizer", tracks.size());
 //        log("track1", tracks.get(0).chords.get(0).get(0).interval);
 //        log("track2", tracks.get(1).chords.get(0).get(0).interval);
         log("melody", melodyTrack.chords.get(0).get(0).interval);
-        return normalize(melodyTrack);
+        return normalizeTrack(melodyTrack);
     }
 
     private static ChordSeqFull getMelodyTrack(List<ChordSeqFull> tracks) {
@@ -133,7 +134,7 @@ public class LaLa {
                 .collect(Collectors.joining(", "));
     }
 
-    private static ChordSeqFull normalize(ChordSeqFull track) {
+    private static ChordSeqFull normalizeTrack(ChordSeqFull track) {
         // 1. choose tops??
 
         // 2. to notes
@@ -165,11 +166,11 @@ public class LaLa {
         return seqs;
     }
 
-    public static List<Integer> getRhythm(ChordSeqFull seq) {
+    public static List<Integer> getRhythm(ChordSeqFull seq) { // todo pause
         return seq.chords.stream().map(ch -> ch.get(0).duration / 55).collect(Collectors.toList());
     }
 
-    private static void log(String str, Object obj) {
+    protected static void log(String str, Object obj) {
         System.out.println(str);
         System.out.println(obj);
     }

@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 public class RecognizeHandler extends RequestHandler implements HttpHandler {
     Recognizer recognizer;
@@ -17,6 +18,8 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
     }
 
     private String resultToJson(Recognizer.Result result) {
+        HashMap<String, Object> obj = new HashMap<>();
+
         String resString = result.pieceName == null ? "null" :
                 "{\"name\": \"" + result.pieceName + "\", \"precision\": " + result.precision + "}";
         String successString = result.precision > 0 ? "\"true\"" : "\"false\"";

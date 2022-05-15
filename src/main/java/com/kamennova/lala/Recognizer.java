@@ -14,6 +14,21 @@ public class Recognizer extends LaLa {
 
         System.out.println(store3.size());
 
+        HashMap<String, Integer> piecesResult = recognizeByNoteSequences();
+        System.out.println("here");
+        System.out.println(piecesResult);
+
+        if (piecesResult.size() == 0) { // todo or else
+            return NO_RESULT;
+        }
+
+        Map.Entry<String, Integer> piece = piecesResult.entrySet().stream()
+                .min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .get();
+        return new Result(piece.getKey(), (float) piece.getValue() + 0.0F);
+    }
+
+    private HashMap<String, Integer> recognizeByNoteSequences(){
         List<List<Integer>> filteredPatterns = store3.entrySet().stream()
                 .filter(entry -> entry.getValue() > 1)
                 .map(Map.Entry::getKey)
@@ -26,18 +41,11 @@ public class Recognizer extends LaLa {
         System.out.println("patterns");
         System.out.println(filteredPatterns);
 
-        HashMap<String, Integer> piecesResult = persistence.findPiecesWithPatterns(filteredPatterns);
-        System.out.println("here");
-        System.out.println(piecesResult);
+        return persistence.findPiecesByNotePatterns(filteredPatterns);
+    }
 
-        if (piecesResult.size() == 0) { // todo or else
-            return NO_RESULT;
-        }
-
-        Map.Entry<String, Integer> piece = piecesResult.entrySet().stream()
-                .min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .get();
-        return new Result(piece.getKey(), (float) piece.getValue() + 0.0F);
+    private HashMap<String, Integer> recognizeByRhythm(){
+        return new HashMap<>();
     }
 
     public Recognizer(Persistence persistence) {

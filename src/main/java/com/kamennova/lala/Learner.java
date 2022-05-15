@@ -67,9 +67,4 @@ public class Learner extends LaLa {
 //        this.clear();
         this.pieceName = pieceName;
     }
-
-    private static void log(String str, Object obj) {
-        System.out.println(str);
-        System.out.println(obj);
-    }
 }

@@ -51,7 +51,7 @@ public class RedisPersistence implements Persistence {
     }
 
     @Override
-    public HashMap<String, Integer> findPiecesWithPatterns(List<List<Integer>> patterns) {
+    public HashMap<String, Integer> findPiecesByNotePatterns(List<List<Integer>> patterns) {
         List<String> piecesNames = new ArrayList<>(jedis.smembers("pieces"));
 //        System.out.
         // temp

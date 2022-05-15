@@ -39,6 +39,7 @@ public class MidiParser {
                     continue;
                 }
 
+                // todo pause
                 ShortMessage message = (ShortMessage) event.getMessage();
                 int key = message.getData1();
                 int command = message.getCommand();

@@ -10,5 +10,7 @@ public interface Persistence {
 
     public List<String> findPiecesWithPattern(List<Integer> pattern);
 
-    public HashMap<String, Integer> findPiecesWithPatterns(List<List<Integer>> patterns);
+    public HashMap<String, Integer> findPiecesByNotePatterns(List<List<Integer>> patterns);
+
+//    public HashMap<String, Integer> findPiecesWithRhythm(List<List<Integer>> patterns);
 }
