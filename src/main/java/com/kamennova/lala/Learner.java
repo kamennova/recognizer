@@ -3,7 +3,10 @@ package com.kamennova.lala;
 import com.kamennova.lala.common.ChordSeqFull;
 import com.kamennova.lala.persistence.Persistence;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class Learner extends LaLa {
@@ -36,17 +39,24 @@ public class Learner extends LaLa {
         // todo
     }
 
-    public int process(ChordSeqFull notes) throws Exception {
+    public int process(ChordSeqFull notes) {
         super.processInput(notes);
-        return 0;
+
+        return getLearnRate();
+    }
+
+    private int getLearnRate() {
+        long commonSeqCount = getCommonSequences(2).count();
+
+        return commonSeqCount < 3 ? 0 : (int) Math.min(commonSeqCount, 10);
+    }
+
+    public Stream<Map.Entry<List<Integer>, Integer>> getSequencesToPersist() {
+        return getCommonSequences(2).limit(10);
     }
 
     public void finishLearn() {
-        Stream
-                <Map.Entry<List<Integer>, Integer>> top =
-                store3.entrySet().stream().filter(entry -> entry.getValue() > 1)
-                        .sorted(java.util.Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                        .limit(5);
+        Stream<Map.Entry<List<Integer>, Integer>> top = getSequencesToPersist();
 
         this.persistence.addPiece(this.pieceName);
         top.forEach(entry -> {
