@@ -34,38 +34,47 @@ public class RedisPersistence implements Persistence {
     }
 
     @Override
-    public void addPattern(String pieceName, List<Integer> pattern) {
-//        String pieceKey = jedis.hget()
-        jedis.sadd(getPiecePatternKey(pieceName, pattern.size()), pattern.toString());
+    public void addPattern(String pieceName, String pattern) {
+        String patternPieceKey = getPiecePatternKey(pieceName, pattern.length());
+        jedis.sadd(patternPieceKey, pattern);
     }
 
     @Override
-    public List<String> findPiecesWithPattern(List<Integer> pattern) {
+    public List<String> findPiecesWithPattern(String pattern, BiFunction<String, String, Integer> compFunc) {
         Set<String> piecesNames = jedis.smembers("pieces");
         System.out.println("members");
-        String patternKey = getPiecePatternKey(piecesNames.iterator().next(), pattern.size());
+        String patternKey = getPiecePatternKey(piecesNames.iterator().next(), pattern.length());
         System.out.println(jedis.smembers(patternKey));
 
         return piecesNames.stream()
-                .filter(name -> jedis.sismember(patternKey, pattern.toString()))
+                .filter(name -> jedis.sismember(patternKey, pattern))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public HashMap<String, Integer> findPiecesByNotePatterns3(List<List<Integer>> patterns) {
+    public Map<String, Integer> findPiecesByNotePatterns(List<String> patterns,
+                                                             BiFunction<String, String, Integer> compFunc) {
+        int patternSize = patterns.get(0).length();
         List<String> piecesNames = new ArrayList<>(jedis.smembers("pieces"));
 
         String tempSearch = "tempSearch";
         jedis.del(tempSearch);
-        patterns.forEach(p -> jedis.sadd(tempSearch, p.toString()));
+        patterns.forEach(p -> jedis.sadd(tempSearch, p));
 
         List<Integer> piecesResults = piecesNames.stream().map(name -> {
-            Set<String> over = jedis.sinter(getPiecePatternKey(name, 3), tempSearch);
+            Set<String> over = jedis.sinter(getPiecePatternKey(name, patternSize), tempSearch);
             System.out.println(over);
             return over.size();
         })
                 .collect(Collectors.toList());
 
+        // todo first search common
+
+        /*
+        piecesResult.entrySet().stream()
+                .min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
+                .get(); todo
+         */
         return IntStream.range(0, piecesNames.size())
                 .boxed()
                 .filter(i -> piecesResults.get(i) > 0)
@@ -74,50 +83,5 @@ public class RedisPersistence implements Persistence {
                         piecesResults::get,
                         (prev, next) -> prev,
                         HashMap::new));
-    }
-
-    @Override
-    public HashMap<String, Integer> findPiecesByNotePatterns4(List<List<Integer>> patterns) {
-        List<String> piecesNames = new ArrayList<>(jedis.smembers("pieces"));
-
-        String tempSearch = "tempSearch";
-        jedis.del(tempSearch);
-        patterns.forEach(p -> jedis.sadd(tempSearch, p.toString()));
-
-        List<Integer> piecesResults = piecesNames.stream().map(name -> {
-            Set<String> over = jedis.sinter(getPiecePatternKey(name, 4), tempSearch);
-            System.out.println(over);
-            return over.size();
-        })
-                .collect(Collectors.toList());
-
-        return IntStream.range(0, piecesNames.size())
-                .boxed()
-                .filter(i -> piecesResults.get(i) > 0)
-                .collect(Collectors.toMap(
-                        piecesNames::get,
-                        piecesResults::get,
-                        (prev, next) -> prev,
-                        HashMap::new));
-    }
-
-    @Override
-    public HashMap<String, Integer> findPiecesByNotePatterns5(List<List<Integer>> patterns) {
-        return null;
-    }
-
-    @Override
-    public HashMap<String, Integer> findPiecesByLinguisticPatterns3(List<String> patterns, BiFunction<String, String, Integer> compFunc) {
-        return null;
-    }
-
-    @Override
-    public HashMap<String, Integer> findPiecesByLinguisticPatterns4(List<String> patterns) {
-        return null;
-    }
-
-    @Override
-    public HashMap<String, Integer> findPiecesByLinguisticPatterns5(List<String> patterns) {
-        return null;
     }
 }

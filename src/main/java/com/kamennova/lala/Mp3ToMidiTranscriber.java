@@ -6,9 +6,14 @@ import java.io.InputStreamReader;
 
 // wrapper class for omnizart
 public class Mp3ToMidiTranscriber {
-    public static boolean transcribeToMidi(String pathToFile) throws IOException, InterruptedException {
-        String command = "omnizart music transcribe " + pathToFile + " -o src/main/resources/upload.mid"; // todo out
+    private String getMidiPath(String input){
+        String[] parts = input.split("\\.");
+        return parts[0] + ".mid";
+    }
 
+    public static boolean transcribeToMidi(String pathToFile, String output) throws IOException, InterruptedException {
+        String command = "omnizart music transcribe " + pathToFile + " -o " + output;
+System.out.println(command);
         Process proc = null;
         proc = Runtime.getRuntime().exec(command);
 
@@ -25,10 +30,9 @@ public class Mp3ToMidiTranscriber {
         return proc.waitFor() == 0;
     }
 
-
     public static void main(String[] args) {
         try {
-            transcribeToMidi("Downloads/record2.mp3");
+            transcribeToMidi("Downloads/record2.mp3", "Downloads/record2.mid");
         } catch (Exception e) {
             e.printStackTrace();
         }

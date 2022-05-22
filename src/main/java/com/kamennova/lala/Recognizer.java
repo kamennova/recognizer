@@ -4,17 +4,20 @@ import com.kamennova.lala.common.ChordSeqFull;
 import com.kamennova.lala.persistence.Persistence;
 
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class Recognizer extends LaLa {
     private static final Result NO_RESULT = new Result(null, 0F);
+    private BiFunction<String, String, Integer> rateFunc = LaLa::comparePatternStrings;
 
     public Result process(ChordSeqFull track) {
         processInput(track);
 
         System.out.println(store3.size());
 
-        HashMap<String, Integer> piecesResult = recognizeByNoteSequences();
+        HashMap<String, Integer> piecesResult = new HashMap<>();
+//        HashMap<String, Integer> piecesResult = recognizeBySequence(store3);
         System.out.println("here");
         System.out.println(piecesResult);
 
@@ -28,38 +31,32 @@ public class Recognizer extends LaLa {
         return new Result(piece.getKey(), (float) piece.getValue() + 0.0F);
     }
 
-    private HashMap<String, Integer> recognizeByNoteSequences(){
-        List<List<Integer>> filteredPatterns3 = getCommonSequences(store4, 2)
+    public List<Result> recognizeByRhythm() {
+        List<String> selected = getCommonSequences(new HashMap<>(), 2)
                 .filter(entry -> entry.getValue() > 1)
-                .map(Map.Entry::getKey)
+                .map(entry -> LaLa.getPatternString(entry.getKey()))
                 .collect(Collectors.toList());
 
-
-        List<List<Integer>> filteredPatterns4 = getCommonSequences(store3, 2)
-                .filter(entry -> entry.getValue() > 1)
-                .map(Map.Entry::getKey)
+        Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
+        return result.entrySet().stream()
+                .map(entry -> new Result(entry.getKey(), entry.getValue() + 0.0F))
                 .collect(Collectors.toList());
-
-//        if (filteredPatterns.size() == 0) {
-//            filteredPatterns = new ArrayList<>(store3.keySet());
-//        }
-
-        System.out.println("patterns");
-        System.out.println(filteredPatterns3);
-        System.out.println(filteredPatterns4);
-
-        HashMap<String, Integer> result3 = persistence.findPiecesByNotePatterns3(filteredPatterns3);
-        HashMap<String, Integer> result4 = persistence.findPiecesByNotePatterns4(filteredPatterns3);
-        HashMap<String, Integer> result5 = persistence.findPiecesByNotePatterns5(filteredPatterns3);
-
-        System.out.println("-----");
-        System.out.println(result3);
-        System.out.println(result4);
-        return result3;
     }
 
-    private HashMap<String, Integer> recognizeByRhythm(){
-        return new HashMap<>();
+    public List<Result> recognizeBySequence(Map<List<Integer>, Integer> store) {
+        List<String> selected = getCommonSequences(store, 2)
+                .filter(entry -> entry.getValue() > 1)
+                .map(entry -> LaLa.getPatternString(entry.getKey()))
+                .collect(Collectors.toList());
+
+        Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
+        return result.entrySet().stream()
+                .map(entry -> new Result(entry.getKey(), entry.getValue() + 0.0F))
+                .collect(Collectors.toList());
+    }
+
+    public void setRateFunc(BiFunction<String, String, Integer> func) {
+        this.rateFunc = func;
     }
 
     public Recognizer(Persistence persistence) {

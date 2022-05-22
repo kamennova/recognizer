@@ -7,24 +7,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Learner extends LaLa {
     private short key;
     private short keyPrecision = 0;
     private String pieceName;
-
-    public Map<List<Integer>, Integer> getStore3() {
-        return store3;
-    }
-
-    public Map<List<Integer>, Integer> getStore4() {
-        return store4;
-    }
-
-    public HashMap<List<Integer>, Integer> getStore5() {
-        return store5;
-    }
+    public static final int SEQUENCES_PERSIST_LIMIT = 15;
 
     public String getPieceName() {
         return this.pieceName;
@@ -61,22 +52,46 @@ public class Learner extends LaLa {
         return commonSeqCount < 3 ? 0 : (int) Math.min(commonSeqCount, 10);
     }
 
-    public Stream<Map.Entry<List<Integer>, Integer>> getSequencesToPersist(Map<List<Integer>, Integer> store) {
-        return getCommonSequences(store, 2).limit(15);
+    private int getOffset(List<List<Integer>> singleSequences) {
+        return 3;
+    }
+
+    public List<List<Integer>> getSequencesToPersist(Map<List<Integer>, Integer> store) {
+        List<List<Integer>> mostCommon = getCommonSequences(store, 2)
+                .limit(SEQUENCES_PERSIST_LIMIT)
+                .map(Map.Entry::getKey).collect(Collectors.toList());
+
+
+        if (mostCommon.size() < SEQUENCES_PERSIST_LIMIT) {
+            List<List<Integer>> singleSequences = store.entrySet().stream()
+                    .filter(entry -> entry.getValue() == 1).map(Map.Entry::getKey).collect(Collectors.toList());
+
+            int sequencesLeft = Math.min(15, singleSequences.size()) - mostCommon.size();
+
+            if (sequencesLeft > 0) {
+                int offset = getOffset(singleSequences);
+
+                List<List<Integer>> selectedSingle = IntStream.range(0, sequencesLeft)
+                        .mapToObj(i -> singleSequences.get(i * offset))
+                        .collect(Collectors.toList());
+
+                return Stream.concat(mostCommon.stream(), selectedSingle.stream()).collect(Collectors.toList());
+            }
+        }
+
+        return mostCommon;
     }
 
     public void finishLearn() {
-        Stream<Map.Entry<List<Integer>, Integer>> top3 = getSequencesToPersist(store3);
-        Stream<Map.Entry<List<Integer>, Integer>> top4 = getSequencesToPersist(store4);
-
         this.persistence.addPiece(this.pieceName);
-        top3.forEach(entry -> {
-            this.persistence.addPattern(this.pieceName, entry.getKey());
-        });
+        this.persistSequences(store3);
+        this.persistSequences(store4);
+        this.persistSequences(store5);
+    }
 
-        top4.forEach(entry -> {
-            this.persistence.addPattern(this.pieceName, entry.getKey());
-        });
+    private void persistSequences(Map<List<Integer>, Integer> store) {
+        List<List<Integer>> best = getSequencesToPersist(store);
+        best.forEach(seq -> this.persistence.addPattern(pieceName, LaLa.getPatternString(seq)));
     }
 
     public void clear() {

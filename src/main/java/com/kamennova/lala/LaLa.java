@@ -20,14 +20,27 @@ public class LaLa {
     protected HashMap<List<Integer>, Integer> store3 = new HashMap<>();
     protected HashMap<List<Integer>, Integer> store4 = new HashMap<>();
     protected HashMap<List<Integer>, Integer> store5 = new HashMap<>();
+
+    public Map<List<Integer>, Integer> getStore3() {
+        return store3;
+    }
+
+    public Map<List<Integer>, Integer> getStore4() {
+        return store4;
+    }
+
+    public HashMap<List<Integer>, Integer> getStore5() {
+        return store5;
+    }
+
     protected List<List<Integer>> rhythmStore = new ArrayList<>();
 
     public Map<List<Integer>, Integer> getSequenceStore() {
         return store3;
     }
 
-    public static String patternToString(List<Integer> pattern){
-        return pattern.stream().map(note -> ((char) 65 + note)).collect(Collector.of(
+    public static String getPatternString(List<Integer> pattern){
+        return pattern.stream().map(note -> ((char) (65 + note))).collect(Collector.of(
                 StringBuilder::new,
                 StringBuilder::append,
                 StringBuilder::append,
@@ -35,6 +48,23 @@ public class LaLa {
     }
 
     public static int comparePatternStrings(String base, String second){
+        return base.equals(second) ? 1 : 0;
+    }
+
+
+    public static int comparePatternsStrict(String base, String second){
+        return base.equals(second) ? 1 : 0;
+    }
+
+    public static int comparePatternsSkip(String base, String second){
+        return base.equals(second) ? 1 : 0;
+    }
+
+    public static int comparePatternsDiff(String base, String second){
+        return base.equals(second) ? 1 : 0;
+    }
+
+    public static int comparePatternsMixed(String base, String second){
         return base.equals(second) ? 1 : 0;
     }
 
