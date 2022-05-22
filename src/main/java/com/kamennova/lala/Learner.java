@@ -14,11 +14,21 @@ public class Learner extends LaLa {
     private short keyPrecision = 0;
     private String pieceName;
 
+    public Map<List<Integer>, Integer> getStore3() {
+        return store3;
+    }
+
+    public Map<List<Integer>, Integer> getStore4() {
+        return store4;
+    }
+
+    public HashMap<List<Integer>, Integer> getStore5() {
+        return store5;
+    }
+
     public String getPieceName() {
         return this.pieceName;
     }
-
-    private HashMap<List<Integer>, Integer> store4 = new HashMap<>();
 
     public Learner(String pieceName, Persistence persistence) {
         super(persistence);
@@ -46,24 +56,27 @@ public class Learner extends LaLa {
     }
 
     private int getLearnRate() {
-        long commonSeqCount = getCommonSequences(2).count();
+        long commonSeqCount = getCommonSequences(store3, 2).count();
 
         return commonSeqCount < 3 ? 0 : (int) Math.min(commonSeqCount, 10);
     }
 
-    public Stream<Map.Entry<List<Integer>, Integer>> getSequencesToPersist() {
-        return getCommonSequences(2).limit(10);
+    public Stream<Map.Entry<List<Integer>, Integer>> getSequencesToPersist(Map<List<Integer>, Integer> store) {
+        return getCommonSequences(store, 2).limit(15);
     }
 
     public void finishLearn() {
-        Stream<Map.Entry<List<Integer>, Integer>> top = getSequencesToPersist();
+        Stream<Map.Entry<List<Integer>, Integer>> top3 = getSequencesToPersist(store3);
+        Stream<Map.Entry<List<Integer>, Integer>> top4 = getSequencesToPersist(store4);
 
         this.persistence.addPiece(this.pieceName);
-        top.forEach(entry -> {
+        top3.forEach(entry -> {
             this.persistence.addPattern(this.pieceName, entry.getKey());
         });
-//        List<List<Integer>> motives = getMotives();
-//        persistMotives(motives, key);
+
+        top4.forEach(entry -> {
+            this.persistence.addPattern(this.pieceName, entry.getKey());
+        });
     }
 
     public void clear() {

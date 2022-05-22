@@ -19,14 +19,15 @@ import static javax.sound.midi.ShortMessage.NOTE_ON;
 // todo speed optimizations
 public class MidiParser {
     // notes within interval of this number of ticks considered to be fired at the same time
-    private static final int tickPrecision = 9; // todo dynamic?
+    private static final int tickPrecision = 13; // todo dynamic?
 
     private static boolean arePlayedSimultaneously(long tick1, long tick2) {
         return Math.abs(tick1 - tick2) <= tickPrecision;
     }
 
     public static List<ChordSeqFull> getNotesFromMidi(String fileName) throws Exception {
-        return getNotesFromMidi(fileName, true);
+//        return getNotesFromMidi(fileName, true);
+        return getNotesFromMidiStaccato(fileName);
     }
 
     /**
@@ -146,8 +147,9 @@ public class MidiParser {
                     continue;
                 }
 
+//                System.out.println(key + " : " + currTick);
                 if (!arePlayedSimultaneously(currTick, lastTick)) {
-                    flushChord(currKeys, notes, Math.toIntExact(lastTick - currTick), false);
+                    flushChord(currKeys, notes, Math.toIntExact(currTick - lastTick), false);
                     lastTick = currTick;
                 }
                 currKeys.put(key, currTick);

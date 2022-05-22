@@ -7,6 +7,7 @@ import com.kamennova.lala.common.Tonality;
 import com.kamennova.lala.persistence.Persistence;
 
 import java.util.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -17,10 +18,24 @@ public class LaLa {
 
     protected Persistence persistence;
     protected HashMap<List<Integer>, Integer> store3 = new HashMap<>();
+    protected HashMap<List<Integer>, Integer> store4 = new HashMap<>();
+    protected HashMap<List<Integer>, Integer> store5 = new HashMap<>();
     protected List<List<Integer>> rhythmStore = new ArrayList<>();
 
-    public HashMap<List<Integer>, Integer> getSequenceStore() {
+    public Map<List<Integer>, Integer> getSequenceStore() {
         return store3;
+    }
+
+    public static String patternToString(List<Integer> pattern){
+        return pattern.stream().map(note -> ((char) 65 + note)).collect(Collector.of(
+                StringBuilder::new,
+                StringBuilder::append,
+                StringBuilder::append,
+                StringBuilder::toString));
+    }
+
+    public static int comparePatternStrings(String base, String second){
+        return base.equals(second) ? 1 : 0;
     }
 
     public static ChordSeqFull getNormalizedMelodyTrack(List<ChordSeqFull> tracks) { // todo no separate func??
@@ -30,7 +45,7 @@ public class LaLa {
     }
 
     private static ChordSeqFull separateMelodyPart(ChordSeqFull track) {
-        double avgKey = getAvgKey(track);
+        double avgKey = getAvgKey(track); // todo hands reach
         short min = track.chords.stream().flatMap(notes -> notes.stream().map(n -> n.interval))
                 .min(Comparator.comparing(Integer::valueOf))
                 .get();
@@ -69,29 +84,36 @@ public class LaLa {
 
     public void processInput(ChordSeqFull notes) {
         List<NoteSeqFull> sequences3 = LaLa.getSequences(notes, 3);
-        storeSequences(sequences3);
+        List<NoteSeqFull> sequences4 = LaLa.getSequences(notes, 4);
+        List<NoteSeqFull> sequences5 = LaLa.getSequences(notes, 5);
+        storeSequences(store3, sequences3);
+        storeSequences(store4, sequences4);
+        storeSequences(store5, sequences5);
         List<Integer> rhythm = LaLa.getRhythm(notes);
+
         storeRhythm(rhythm);
     }
 
-    protected Stream<Map.Entry<List<Integer>, Integer>> getCommonSequences(int repeatMin) {
-        return store3.entrySet().stream().filter(entry -> entry.getValue() >= repeatMin)
+    protected Stream<Map.Entry<List<Integer>, Integer>> getCommonSequences(Map<List<Integer>, Integer> store,
+                                                                           int repeatMin) {
+        return store.entrySet().stream()
+                .filter(entry -> entry.getValue() >= repeatMin)
                 .sorted(java.util.Map.Entry.comparingByValue(Comparator.reverseOrder()));
     }
 
-    private void storeSequences(List<NoteSeqFull> seqs) {
+    private void storeSequences(Map<List<Integer>, Integer> store, List<NoteSeqFull> seqs) {
         seqs.stream()
                 .map(seq -> seq.notes.stream()
                         .map(n -> Math.toIntExact(n.interval))
                         .collect(Collectors.toList()))
-                .forEach(notes -> store3.put(notes, store3.getOrDefault(notes, 0) + 1));
+                .forEach(notes -> store.put(notes, store.getOrDefault(notes, 0) + 1));
     }
 
     private void storeRhythm(List<Integer> r) {
         rhythmStore.add(r);
     }
 
-    private static void printRhythm(List<Integer> r) {
+    public static void printRhythm(List<Integer> r) {
         log("rhythm", r.stream().map(("-")::repeat).collect(Collectors.joining(" ")));
     }
 
@@ -163,7 +185,9 @@ public class LaLa {
     private static ChordSeqFull normalizeTrack(ChordSeqFull track) {
         track.chords = track.chords.stream()
                 .map(chord -> Collections.singletonList(chord.stream().max(Comparator.comparing(n -> n.interval)).get()))
-                .map(chord -> chord.stream().map(note -> new RNote(note.interval % 12, note.duration)).collect(Collectors.toList()))
+                .map(chord -> chord.stream()
+                        .map(note -> new RNote(note.interval % 12, note.duration))
+                        .collect(Collectors.toList()))
                 .collect(Collectors.toList());
 
         return track;
@@ -178,12 +202,16 @@ public class LaLa {
         for (int i = 0; i < notes.size() - size; i++) {
             NoteSeqFull seq = new NoteSeqFull(notes.subList(i, i + size));
 
-            if (!(seq.notes.get(0).interval == seq.notes.get(1).interval && seq.notes.get(1).interval == seq.notes.get(2).interval)) {
+            if (!areAllNotesSame(seq)) {
                 seqs.add(seq);
             }
         }
 
         return seqs;
+    }
+
+    private static boolean areAllNotesSame(NoteSeqFull notes) {
+        return notes.notes.stream().map(n -> n.interval).distinct().count() == 1;
     }
 
     public static List<Integer> getRhythm(ChordSeqFull seq) { // todo pause
