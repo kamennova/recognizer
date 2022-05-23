@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 public class Recognizer extends LaLa {
     private static final Result NO_RESULT = new Result(null, 0F);
-    private BiFunction<String, String, Integer> rateFunc = LaLa::comparePatternStrings;
+    private BiFunction<String, String, Integer> rateFunc = LaLa::comparePatternsStrict;
 
     public Result process(ChordSeqFull track) {
         processInput(track);
@@ -18,8 +18,6 @@ public class Recognizer extends LaLa {
 
         HashMap<String, Integer> piecesResult = new HashMap<>();
 //        HashMap<String, Integer> piecesResult = recognizeBySequence(store3);
-        System.out.println("here");
-        System.out.println(piecesResult);
 
         if (piecesResult.size() == 0) { // todo or else
             return NO_RESULT;
@@ -44,9 +42,8 @@ public class Recognizer extends LaLa {
     }
 
     public List<Result> recognizeBySequence(Map<List<Integer>, Integer> store) {
-        List<String> selected = getCommonSequences(store, 2)
-                .filter(entry -> entry.getValue() > 1)
-                .map(entry -> LaLa.getPatternString(entry.getKey()))
+        List<String> selected = getSequencesToPersist(store).stream() // todo rename func
+                .map(LaLa::getPatternString)
                 .collect(Collectors.toList());
 
         Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);

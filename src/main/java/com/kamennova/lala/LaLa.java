@@ -9,6 +9,7 @@ import com.kamennova.lala.persistence.Persistence;
 import java.util.*;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class LaLa {
@@ -20,6 +21,7 @@ public class LaLa {
     protected HashMap<List<Integer>, Integer> store3 = new HashMap<>();
     protected HashMap<List<Integer>, Integer> store4 = new HashMap<>();
     protected HashMap<List<Integer>, Integer> store5 = new HashMap<>();
+    public static final int SEQUENCES_PERSIST_LIMIT = 15;
 
     public Map<List<Integer>, Integer> getStore3() {
         return store3;
@@ -39,7 +41,7 @@ public class LaLa {
         return store3;
     }
 
-    public static String getPatternString(List<Integer> pattern){
+    public static String getPatternString(List<Integer> pattern) {
         return pattern.stream().map(note -> ((char) (65 + note))).collect(Collector.of(
                 StringBuilder::new,
                 StringBuilder::append,
@@ -47,24 +49,41 @@ public class LaLa {
                 StringBuilder::toString));
     }
 
-    public static int comparePatternStrings(String base, String second){
+    public static int comparePatternsStrict(String base, String second) {
         return base.equals(second) ? 1 : 0;
     }
 
+    public static int comparePatternsSkip(String base, String second) {
+        int diff = 0;
+        for (int i = 0; i < base.length(); i++) {
+            if (base.charAt(i) != second.charAt(i)) {
+                diff++;
+            }
 
-    public static int comparePatternsStrict(String base, String second){
-        return base.equals(second) ? 1 : 0;
+            if (diff == 2) {
+                return 0;
+            }
+        }
+
+        return 3 - diff;
     }
 
-    public static int comparePatternsSkip(String base, String second){
-        return base.equals(second) ? 1 : 0;
+    public static int comparePatternsDiff(String base, String second) {
+        int diff = 0;
+        for (int i = 0; i < base.length(); i++) {
+            if (base.charAt(i) != second.charAt(i)) {
+                diff++;
+            }
+
+            if (diff == 2) {
+                return 0;
+            }
+        }
+
+        return 3 - diff;
     }
 
-    public static int comparePatternsDiff(String base, String second){
-        return base.equals(second) ? 1 : 0;
-    }
-
-    public static int comparePatternsMixed(String base, String second){
+    public static int comparePatternsMixed(String base, String second) {
         return base.equals(second) ? 1 : 0;
     }
 
@@ -122,6 +141,36 @@ public class LaLa {
         List<Integer> rhythm = LaLa.getRhythm(notes);
 
         storeRhythm(rhythm);
+    }
+
+
+    private int getOffset(List<List<Integer>> singleSequences) {
+        return 3; // todo
+    }
+
+    public List<List<Integer>> getSequencesToPersist(Map<List<Integer>, Integer> store) {
+        List<List<Integer>> mostCommon = getCommonSequences(store, 2)
+                .limit(SEQUENCES_PERSIST_LIMIT)
+                .map(Map.Entry::getKey).collect(Collectors.toList());
+
+        if (mostCommon.size() < SEQUENCES_PERSIST_LIMIT) {
+            List<List<Integer>> singleSequences = store.entrySet().stream()
+                    .filter(entry -> entry.getValue() == 1).map(Map.Entry::getKey).collect(Collectors.toList());
+
+            int sequencesLeft = Math.min(15, singleSequences.size()) - mostCommon.size();
+
+            if (sequencesLeft > 0) {
+                int offset = getOffset(singleSequences);
+
+                List<List<Integer>> selectedSingle = IntStream.range(0, sequencesLeft)
+                        .mapToObj(i -> singleSequences.get(i * offset))
+                        .collect(Collectors.toList());
+
+                return Stream.concat(mostCommon.stream(), selectedSingle.stream()).collect(Collectors.toList());
+            }
+        }
+
+        return mostCommon;
     }
 
     protected Stream<Map.Entry<List<Integer>, Integer>> getCommonSequences(Map<List<Integer>, Integer> store,

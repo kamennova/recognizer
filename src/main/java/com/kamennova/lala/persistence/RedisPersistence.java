@@ -54,6 +54,10 @@ public class RedisPersistence implements Persistence {
     @Override
     public Map<String, Integer> findPiecesByNotePatterns(List<String> patterns,
                                                              BiFunction<String, String, Integer> compFunc) {
+        if (patterns.size() == 0) {
+            return new HashMap<>();
+        }
+
         int patternSize = patterns.get(0).length();
         List<String> piecesNames = new ArrayList<>(jedis.smembers("pieces"));
 
@@ -61,27 +65,27 @@ public class RedisPersistence implements Persistence {
         jedis.del(tempSearch);
         patterns.forEach(p -> jedis.sadd(tempSearch, p));
 
-        List<Integer> piecesResults = piecesNames.stream().map(name -> {
-            Set<String> over = jedis.sinter(getPiecePatternKey(name, patternSize), tempSearch);
-            System.out.println(over);
-            return over.size();
-        })
-                .collect(Collectors.toList());
+        HashMap<String, Integer> piecesResult = new HashMap<>();
 
-        // todo first search common
+        for (int i =0; i < piecesNames.size(); i++){
+            String name = piecesNames.get(i);
+            Set<String> existing = jedis.smembers(getPiecePatternKey(name, patternSize));
+            Integer score = existing.stream()
+                    .map(str -> patterns.stream().map(base -> compFunc.apply(base, str)).reduce(0, Integer::sum))
+                    .reduce(0, Integer::sum);
 
-        /*
-        piecesResult.entrySet().stream()
-                .min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .get(); todo
-         */
-        return IntStream.range(0, piecesNames.size())
-                .boxed()
-                .filter(i -> piecesResults.get(i) > 0)
-                .collect(Collectors.toMap(
-                        piecesNames::get,
-                        piecesResults::get,
-                        (prev, next) -> prev,
-                        HashMap::new));
+            if (score > 0) {
+                piecesResult.put(name, score);
+            }
+        }
+
+       return piecesResult.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.naturalOrder()))
+                .limit(5)
+               .collect(Collectors.toMap(
+                       Map.Entry::getKey,
+                       Map.Entry::getValue,
+                       (prev, next) -> prev,
+                       HashMap::new));
     }
 }

@@ -56,15 +56,17 @@ public class Performance extends BaseTest {
 
             try {
                 String cut = getCutFilename(recording.getPath());
-                AudioFileCutter.cutMp3File(0, 30, recording.getPath(), cut);
+//                AudioFileCutter.cutMp3File(0, 30, recording.getPath(), cut);
 
                 String midiPath = getMidiPath(pieceName);
-                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
+//                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
                 List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(midiPath);
                 ChordSeqFull track = LaLa.getNormalizedMelodyTrack(tracks);
+                System.out.println(track.chords.stream().map(n -> n.get(0).interval + " " + n.get(0).duration).collect(Collectors.toList()));
 
                 Learner learnEntity = getLearnEntity(recording.getName());
                 int learnLevel = learnEntity.process(track); // todo split in transcribe
+                LaLa.printRhythm(learnEntity.getRhythm());
                 learnEntity.finishLearn();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -73,7 +75,7 @@ public class Performance extends BaseTest {
 
         // performance result
         Map<String, List<List<PerformanceResult>>> results = new HashMap<>();
-
+/*
         for (int i = 0; i < performanceFiles.length; i++) {
             File recording = performanceFiles[i];
             if (!recording.isFile()) {
@@ -81,24 +83,26 @@ public class Performance extends BaseTest {
             }
 
             try {
-                // todo get random cut version
                 String cutFileName = getCutFilename(recording.getAbsolutePath());
                 int startSecond = (int) Math.round(Math.random() * 90);
-                System.out.println(startSecond + " " + cutFileName);
-                AudioFileCutter.cutMp3File(startSecond, 15, recording.getAbsolutePath(), cutFileName);
+                System.out.println(startSecond);
+//                AudioFileCutter.cutMp3File(startSecond, 15, recording.getAbsolutePath(), cutFileName);
 
                 String midiPath = getMidiPath(getPieceName(recording.getName()));
+                //                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
                 List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(midiPath);
                 ChordSeqFull track = LaLa.getNormalizedMelodyTrack(tracks);
 
                 Recognizer recognizeEntity = getRecognizeEntity(false);
-                recognizeEntity.process(track);
+                recognizeEntity.processInput(track);
 
                 for (int d = 0; d < dataOptions.size(); d++) {
                     String data = dataOptions.get(d);
+                    System.out.println("For data: " + data);
 
                     for (int r = 0; r < rateFuncOptions.size(); r++) {
                         String rate = rateFuncOptions.get(r);
+                        System.out.println("with rate function " + rate);
 
                         recognizeEntity.setRateFunc(getRateFunc(rate));
                         List<Recognizer.Result> pieceResults = new ArrayList<>();
@@ -108,14 +112,20 @@ public class Performance extends BaseTest {
                         } else {
                             pieceResults = recognizer.recognizeBySequence(getStore(data, recognizeEntity));
                         }
-
+System.out.println(pieceResults.get(0).pieceName + " " + pieceResults.get(0).precision);
                         List<PerformanceResult> converted = pieceResults.stream()
                                 .map(res -> new PerformanceResult(res.precision,
                                         res.pieceName.equals(recording.getName()),
                                         100))
                                 .collect(Collectors.toList());
                         String resultKey = data + "+" + rate;
-                        results.getOrDefault(resultKey, new ArrayList<>()).add(converted);
+
+                        List<List<PerformanceResult>> old = results.get(resultKey);
+                        if (old == null) {
+                            results.put(resultKey, Arrays.asList(converted));
+                        } else {
+                            old.add(converted);
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -123,7 +133,7 @@ public class Performance extends BaseTest {
             }
 
         }
-
+*/
         System.out.println(results);
     }
 
