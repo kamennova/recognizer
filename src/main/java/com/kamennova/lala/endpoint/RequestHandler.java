@@ -1,7 +1,7 @@
 package com.kamennova.lala.endpoint;
 
 import com.kamennova.lala.*;
-import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.Persistence;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -51,11 +51,11 @@ public class RequestHandler {
         return "{\"error\": \"" + message + "\"}";
     }
 
-    protected ChordSeqFull getTrackFromAudioInput(String pathToRecording) {
+    protected ChordSeq getTrackFromAudioInput(String pathToRecording) {
         try {
 //            Mp3ToMidiTranscriber.transcribeToMidi(pathToRecording);
             String inputPath = "src/main/resources/Path1.mid";
-            List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(inputPath);
+            List<ChordSeq> tracks = MidiParser.getNotesFromMidi(inputPath);
             return LaLa.getNormalizedMelodyTrack(tracks);
         } catch (Exception e) {
             System.out.println(e);

@@ -1,5 +1,5 @@
 import com.kamennova.lala.*;
-import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.RedisPersistence;
 import org.junit.jupiter.api.Test;
 
@@ -56,16 +56,17 @@ public class Performance extends BaseTest {
 
             try {
                 String cut = getCutFilename(recording.getPath());
-//                AudioFileCutter.cutMp3File(0, 30, recording.getPath(), cut);
+                AudioFileCutter.cutMp3File(0, 50, recording.getPath(), cut);
 
                 String midiPath = getMidiPath(pieceName);
-//                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
-                List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(midiPath);
-                ChordSeqFull track = LaLa.getNormalizedMelodyTrack(tracks);
-                System.out.println(track.chords.stream().map(n -> n.get(0).interval + " " + n.get(0).duration).collect(Collectors.toList()));
+                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
+                List<ChordSeq> tracks = MidiParser.getNotesFromMidi(midiPath);
+                ChordSeq track = LaLa.getNormalizedMelodyTrack(tracks);
+                System.out.println(track.chords.stream().map(n -> n.iterator().next().interval + " " +
+                        n.iterator().next().duration).collect(Collectors.toList()));
 
                 Learner learnEntity = getLearnEntity(recording.getName());
-                int learnLevel = learnEntity.process(track); // todo split in transcribe
+                int learnLevel = learnEntity.process(track);
                 LaLa.printRhythm(learnEntity.getRhythm());
                 learnEntity.finishLearn();
             } catch (Exception e) {

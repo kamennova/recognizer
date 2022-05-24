@@ -1,6 +1,6 @@
 package com.kamennova.lala;
 
-import com.kamennova.lala.common.RNote;
+import com.kamennova.lala.common.Note;
 import com.kamennova.lala.common.Tonality;
 
 import java.util.ArrayList;
@@ -17,7 +17,7 @@ public class Constants {
             65, 69, 69, 65, 64, 67, 67, 64, 62, 64, 65, 60, 60,
             65, 69, 69, 65, 64, 67, 67, 64, 62, 64, 65, 60, 60));
 
-    List<RNote> timedGeese = new ArrayList<>(Arrays.asList(
+    List<Note> timedGeese = new ArrayList<>(Arrays.asList(
             n(65, 4), n(64, 4), n(62, 4), n(60, 4), n(67, 8), n(67, 8),
             n(65, 4), n(64, 4), n(62, 4), n(60, 4), n(67, 8), n(67, 8),
             n(65, 4), n(69, 4), n(69, 4), n(65, 4), n(64, 4), n(67, 4), n(67, 4), n(64, 4),
@@ -120,7 +120,7 @@ public class Constants {
         }
     }
 
-    private RNote n(int interval, int duration) {
-        return new RNote(interval, duration);
+    private Note n(int interval, int duration) {
+        return new Note(interval, duration);
     }
 }

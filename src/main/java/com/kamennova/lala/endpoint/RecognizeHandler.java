@@ -1,7 +1,7 @@
 package com.kamennova.lala.endpoint;
 
 import com.kamennova.lala.Recognizer;
-import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.Persistence;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -53,7 +53,7 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
         } else {
             try {
                 String pathToFile = downloadRecording(httpExchange.getRequestBody());
-                ChordSeqFull track = getTrackFromAudioInput(pathToFile);
+                ChordSeq track = getTrackFromAudioInput(pathToFile);
                 updateRecognizeEntity(false);
 
                 Recognizer.Result result = this.recognizer.process(track);

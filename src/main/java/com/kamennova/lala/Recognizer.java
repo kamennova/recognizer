@@ -1,6 +1,6 @@
 package com.kamennova.lala;
 
-import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.Persistence;
 
 import java.util.*;
@@ -11,7 +11,7 @@ public class Recognizer extends LaLa {
     private static final Result NO_RESULT = new Result(null, 0F);
     private BiFunction<String, String, Integer> rateFunc = LaLa::comparePatternsStrict;
 
-    public Result process(ChordSeqFull track) {
+    public Result process(ChordSeq track) {
         processInput(track);
 
         System.out.println(store3.size());

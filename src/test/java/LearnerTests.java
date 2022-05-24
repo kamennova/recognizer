@@ -1,7 +1,7 @@
 import com.kamennova.lala.LaLa;
 import com.kamennova.lala.Learner;
 import com.kamennova.lala.MidiParser;
-import com.kamennova.lala.common.ChordSeqFull;
+import com.kamennova.lala.common.ChordSeq;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -13,8 +13,8 @@ public class LearnerTests extends BaseTest {
     @Test
     void testLearnLevelNotEnough() throws Exception {
         String inputPath = "src/main/resources/samples/geese.mid";
-        List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(inputPath);
-        ChordSeqFull track = LaLa.getNormalizedMelodyTrack(tracks);
+        List<ChordSeq> tracks = MidiParser.getNotesFromMidi(inputPath);
+        ChordSeq track = LaLa.getNormalizedMelodyTrack(tracks);
 
         Learner learnEntity = getLearnEntity("geese");
 
@@ -25,8 +25,8 @@ public class LearnerTests extends BaseTest {
     @Test
     void testLearnSuccessful() throws Exception {
         String inputPath = "src/main/resources/samples/geese.mid";
-        List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(inputPath);
-        ChordSeqFull track = LaLa.getNormalizedMelodyTrack(tracks);
+        List<ChordSeq> tracks = MidiParser.getNotesFromMidi(inputPath);
+        ChordSeq track = LaLa.getNormalizedMelodyTrack(tracks);
 
         Learner learnEntity = getLearnEntity("geese");
 

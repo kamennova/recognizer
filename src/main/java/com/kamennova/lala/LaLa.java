@@ -1,8 +1,8 @@
 package com.kamennova.lala;
 
-import com.kamennova.lala.common.ChordSeqFull;
-import com.kamennova.lala.common.NoteSeqFull;
-import com.kamennova.lala.common.RNote;
+import com.kamennova.lala.common.ChordSeq;
+import com.kamennova.lala.common.NoteSeq;
+import com.kamennova.lala.common.Note;
 import com.kamennova.lala.common.Tonality;
 import com.kamennova.lala.persistence.Persistence;
 
@@ -87,13 +87,13 @@ public class LaLa {
         return base.equals(second) ? 1 : 0;
     }
 
-    public static ChordSeqFull getNormalizedMelodyTrack(List<ChordSeqFull> tracks) { // todo no separate func??
-        ChordSeqFull melodyTrack = tracks.size() == 1 ? separateMelodyPart(tracks.get(0)) :
+    public static ChordSeq getNormalizedMelodyTrack(List<ChordSeq> tracks) { // todo no separate func??
+        ChordSeq melodyTrack = tracks.size() == 1 ? separateMelodyPart(tracks.get(0)) :
                 getMelodyTrack(tracks);
         return normalizeTrack(melodyTrack);
     }
 
-    private static ChordSeqFull separateMelodyPart(ChordSeqFull track) {
+    private static ChordSeq separateMelodyPart(ChordSeq track) {
         double avgKey = getAvgKey(track); // todo hands reach
         short min = track.chords.stream().flatMap(notes -> notes.stream().map(n -> n.interval))
                 .min(Comparator.comparing(Integer::valueOf))
@@ -101,18 +101,18 @@ public class LaLa {
         double lowestKey = min + (avgKey - min) / 2;
 
         track.chords = track.chords.stream()
-                .map(chord -> chord.stream().filter(note -> note.interval > lowestKey).collect(Collectors.toList()))
+                .map(chord -> chord.stream().filter(note -> note.interval > lowestKey).collect(Collectors.toSet()))
                 .filter(chord -> chord.size() > 0) // todo filters out pause
                 .collect(Collectors.toList());
 
         return track;
     }
 
-    private static ChordSeqFull getMelodyTrack(List<ChordSeqFull> tracks) {
-        ChordSeqFull highest = tracks.get(0);
+    private static ChordSeq getMelodyTrack(List<ChordSeq> tracks) {
+        ChordSeq highest = tracks.get(0);
         double highestMid = 0;
 
-        for (ChordSeqFull track : tracks) {
+        for (ChordSeq track : tracks) {
             double avg = getAvgKey(track);
 
             if (avg > highestMid) {
@@ -124,17 +124,17 @@ public class LaLa {
         return highest;
     }
 
-    private static double getAvgKey(ChordSeqFull track) {
+    private static double getAvgKey(ChordSeq track) {
         return track.chords.stream()
                 .map(chord -> (chord.stream()
                         .map(note -> (int) note.interval).reduce(0, Integer::sum) + 0.0) / chord.size())
                 .reduce(0D, Double::sum) / track.chords.size();
     }
 
-    public void processInput(ChordSeqFull notes) {
-        List<NoteSeqFull> sequences3 = LaLa.getSequences(notes, 3);
-        List<NoteSeqFull> sequences4 = LaLa.getSequences(notes, 4);
-        List<NoteSeqFull> sequences5 = LaLa.getSequences(notes, 5);
+    public void processInput(ChordSeq notes) {
+        List<NoteSeq> sequences3 = LaLa.getSequences(notes, 3);
+        List<NoteSeq> sequences4 = LaLa.getSequences(notes, 4);
+        List<NoteSeq> sequences5 = LaLa.getSequences(notes, 5);
         storeSequences(store3, sequences3);
         storeSequences(store4, sequences4);
         storeSequences(store5, sequences5);
@@ -180,7 +180,7 @@ public class LaLa {
                 .sorted(java.util.Map.Entry.comparingByValue(Comparator.reverseOrder()));
     }
 
-    private void storeSequences(Map<List<Integer>, Integer> store, List<NoteSeqFull> seqs) {
+    private void storeSequences(Map<List<Integer>, Integer> store, List<NoteSeq> seqs) {
         seqs.stream()
                 .map(seq -> seq.notes.stream()
                         .map(n -> Math.toIntExact(n.interval))
@@ -196,7 +196,7 @@ public class LaLa {
         log("rhythm", r.stream().map(("-")::repeat).collect(Collectors.joining(" ")));
     }
 
-    private static Tonality getTonality(List<List<RNote>> notes) {
+    private static Tonality getTonality(List<List<Note>> notes) {
         HashMap<Integer, Integer> semiMap = new HashMap<>();
         List<Integer> semi = notes.stream().flatMap(Collection::stream)
                 .map(note -> note.interval % 12)
@@ -236,23 +236,23 @@ public class LaLa {
         return rest == 1 || rest == 3 || rest == 6 || rest == 8 || rest == 10;
     }
 
-    private static List<NoteSeqFull> chordToNoteSeq(ChordSeqFull seq) {
+    private static List<NoteSeq> chordToNoteSeq(ChordSeq seq) {
         return combineNotesStep(seq, 0);
     }
 
-    private static List<NoteSeqFull> combineNotesStep(ChordSeqFull chords, int chordIndex) {
-        List<RNote> currChord = chords.get().get(chordIndex);
+    private static List<NoteSeq> combineNotesStep(ChordSeq chords, int chordIndex) {
+        Set<Note> currChord = chords.get().get(chordIndex);
 
         if (chordIndex == chords.get().size() - 1) {
-            return currChord.stream().map(n -> new NoteSeqFull(Collections.singletonList(n)))
+            return currChord.stream().map(n -> new NoteSeq(Collections.singletonList(n)))
                     .collect(Collectors.toList());
         }
 
-        List<NoteSeqFull> prevs = combineNotesStep(chords, chordIndex + 1);
+        List<NoteSeq> prevs = combineNotesStep(chords, chordIndex + 1);
 
         return currChord.stream().flatMap(note -> prevs.stream().map(prSeq -> {
-            List<RNote> conc = Stream.concat(Stream.of(note), prSeq.get().stream()).collect(Collectors.toList());
-            return new NoteSeqFull(conc);
+            List<Note> conc = Stream.concat(Stream.of(note), prSeq.get().stream()).collect(Collectors.toList());
+            return new NoteSeq(conc);
         })).collect(Collectors.toList());
     }
 
@@ -261,25 +261,25 @@ public class LaLa {
                 .collect(Collectors.joining(", "));
     }
 
-    private static ChordSeqFull normalizeTrack(ChordSeqFull track) {
+    private static ChordSeq normalizeTrack(ChordSeq track) {
         track.chords = track.chords.stream()
                 .map(chord -> Collections.singletonList(chord.stream().max(Comparator.comparing(n -> n.interval)).get()))
                 .map(chord -> chord.stream()
-                        .map(note -> new RNote(note.interval % 12, note.duration))
-                        .collect(Collectors.toList()))
+                        .map(note -> new Note(note.interval % 12, note.duration))
+                        .collect(Collectors.toSet()))
                 .collect(Collectors.toList());
 
         return track;
     }
 
-    public static List<NoteSeqFull> getSequences(ChordSeqFull track, Integer size) { // todo make one without shift to save???
-        List<NoteSeqFull> seqs = new ArrayList<>();
-        List<RNote> notes = track.chords.stream()
+    public static List<NoteSeq> getSequences(ChordSeq track, Integer size) { // todo make one without shift to save???
+        List<NoteSeq> seqs = new ArrayList<>();
+        List<Note> notes = track.chords.stream()
                 .map(chord -> chord.stream().max(Comparator.comparing(n -> n.interval)).get())
                 .collect(Collectors.toList());
 
         for (int i = 0; i < notes.size() - size; i++) {
-            NoteSeqFull seq = new NoteSeqFull(notes.subList(i, i + size));
+            NoteSeq seq = new NoteSeq(notes.subList(i, i + size));
 
             if (!areAllNotesSame(seq)) {
                 seqs.add(seq);
@@ -289,12 +289,12 @@ public class LaLa {
         return seqs;
     }
 
-    private static boolean areAllNotesSame(NoteSeqFull notes) {
+    private static boolean areAllNotesSame(NoteSeq notes) {
         return notes.notes.stream().map(n -> n.interval).distinct().count() == 1;
     }
 
-    public static List<Integer> getRhythm(ChordSeqFull seq) { // todo pause
-        return seq.chords.stream().map(ch -> ch.get(0).duration / 55).collect(Collectors.toList());
+    public static List<Integer> getRhythm(ChordSeq seq) { // todo pause
+        return seq.chords.stream().map(ch -> ch.iterator().next().duration / 55).collect(Collectors.toList());
     }
 
     protected static void log(String str, Object obj) {

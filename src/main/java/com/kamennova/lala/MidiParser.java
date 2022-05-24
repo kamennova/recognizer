@@ -1,7 +1,7 @@
 package com.kamennova.lala;
 
-import com.kamennova.lala.common.ChordSeqFull;
-import com.kamennova.lala.common.RNote;
+import com.kamennova.lala.common.ChordSeq;
+import com.kamennova.lala.common.Note;
 
 import javax.sound.midi.MidiEvent;
 import javax.sound.midi.MidiSystem;
@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static javax.sound.midi.ShortMessage.NOTE_ON;
@@ -25,7 +26,7 @@ public class MidiParser {
         return Math.abs(tick1 - tick2) <= tickPrecision;
     }
 
-    public static List<ChordSeqFull> getNotesFromMidi(String fileName) throws Exception {
+    public static List<ChordSeq> getNotesFromMidi(String fileName) throws Exception {
 //        return getNotesFromMidi(fileName, true);
         return getNotesFromMidiStaccato(fileName);
     }
@@ -43,15 +44,15 @@ public class MidiParser {
      * @return
      * @throws Exception
      */
-    public static List<ChordSeqFull> getNotesFromMidi(String fileName, boolean isLegato) throws Exception {
+    public static List<ChordSeq> getNotesFromMidi(String fileName, boolean isLegato) throws Exception {
         var sequence = MidiSystem.getSequence(new File(fileName));
 
-        List<ChordSeqFull> tracks = new ArrayList<>();
+        List<ChordSeq> tracks = new ArrayList<>();
 
         for (Track track : sequence.getTracks()) {
             if (track.size() == 0) continue;
 
-            ChordSeqFull notes = new ChordSeqFull(new ArrayList<>());
+            ChordSeq notes = new ChordSeq(new ArrayList<>());
 
 //            List<Integer> currPlayedNotes = new ArrayList<>(); // keys played in current moment
 //            List<Integer> currTickNotes = new ArrayList<>(); // keys played in same, last tracked,  tick
@@ -116,15 +117,15 @@ public class MidiParser {
     }
 
     // todo pause
-    public static List<ChordSeqFull> getNotesFromMidiStaccato(String fileName) throws Exception {
+    public static List<ChordSeq> getNotesFromMidiStaccato(String fileName) throws Exception {
         var sequence = MidiSystem.getSequence(new File(fileName));
 
-        List<ChordSeqFull> tracks = new ArrayList<>();
+        List<ChordSeq> tracks = new ArrayList<>();
 
         for (Track track : sequence.getTracks()) {
             if (track.size() == 0) continue;
 
-            ChordSeqFull notes = new ChordSeqFull(new ArrayList<>());
+            ChordSeq notes = new ChordSeq(new ArrayList<>());
             Map<Integer, Long> currKeys = new HashMap<>();
             long lastTick = 0; // tick of the last played note
 
@@ -169,9 +170,9 @@ public class MidiParser {
         return tracks;
     }
 
-    private static void flushChord(Map<Integer, Long> currKeys, ChordSeqFull notes, int dur, boolean legato) {
-        List<RNote> chord = currKeys.keySet().stream().map(n -> new RNote(n, dur))
-                .collect(Collectors.toList());
+    private static void flushChord(Map<Integer, Long> currKeys, ChordSeq notes, int dur, boolean legato) {
+        Set<Note> chord = currKeys.keySet().stream().map(n -> new Note(n, dur))
+                .collect(Collectors.toSet());
         notes.chords.add(chord);
 
         if (!legato) {
