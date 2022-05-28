@@ -12,8 +12,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class LaLa {
-    LaLa(Persistence persistence) {
+public class MusicProcessor {
+    MusicProcessor(Persistence persistence) {
         this.persistence = persistence;
     }
 
@@ -36,10 +36,6 @@ public class LaLa {
     }
 
     protected List<List<Integer>> rhythmStore = new ArrayList<>();
-
-    public Map<List<Integer>, Integer> getSequenceStore() {
-        return store3;
-    }
 
     public static String getPatternString(List<Integer> pattern) {
         return pattern.stream().map(note -> ((char) (65 + note))).collect(Collector.of(
@@ -87,65 +83,21 @@ public class LaLa {
         return base.equals(second) ? 1 : 0;
     }
 
-    public static ChordSeq getNormalizedMelodyTrack(List<ChordSeq> tracks) { // todo no separate func??
-        ChordSeq melodyTrack = tracks.size() == 1 ? separateMelodyPart(tracks.get(0)) :
-                getMelodyTrack(tracks);
-        return normalizeTrack(melodyTrack);
-    }
-
-    private static ChordSeq separateMelodyPart(ChordSeq track) {
-        double avgKey = getAvgKey(track); // todo hands reach
-        short min = track.chords.stream().flatMap(notes -> notes.stream().map(n -> n.interval))
-                .min(Comparator.comparing(Integer::valueOf))
-                .get();
-        double lowestKey = min + (avgKey - min) / 2;
-
-        track.chords = track.chords.stream()
-                .map(chord -> chord.stream().filter(note -> note.interval > lowestKey).collect(Collectors.toSet()))
-                .filter(chord -> chord.size() > 0) // todo filters out pause
-                .collect(Collectors.toList());
-
-        return track;
-    }
-
-    private static ChordSeq getMelodyTrack(List<ChordSeq> tracks) {
-        ChordSeq highest = tracks.get(0);
-        double highestMid = 0;
-
-        for (ChordSeq track : tracks) {
-            double avg = getAvgKey(track);
-
-            if (avg > highestMid) {
-                highestMid = avg;
-                highest = track;
-            }
-        }
-
-        return highest;
-    }
-
-    private static double getAvgKey(ChordSeq track) {
-        return track.chords.stream()
-                .map(chord -> (chord.stream()
-                        .map(note -> (int) note.interval).reduce(0, Integer::sum) + 0.0) / chord.size())
-                .reduce(0D, Double::sum) / track.chords.size();
-    }
-
     public void processInput(ChordSeq notes) {
-        List<NoteSeq> sequences3 = LaLa.getSequences(notes, 3);
-        List<NoteSeq> sequences4 = LaLa.getSequences(notes, 4);
-        List<NoteSeq> sequences5 = LaLa.getSequences(notes, 5);
+        List<NoteSeq> sequences3 = MusicProcessor.getSequences(notes, 3);
+        List<NoteSeq> sequences4 = MusicProcessor.getSequences(notes, 4);
+        List<NoteSeq> sequences5 = MusicProcessor.getSequences(notes, 5);
         storeSequences(store3, sequences3);
         storeSequences(store4, sequences4);
         storeSequences(store5, sequences5);
-        List<Integer> rhythm = LaLa.getRhythm(notes);
+        List<Integer> rhythm = MusicProcessor.getRhythm(notes);
 
         storeRhythm(rhythm);
     }
 
-
-    private int getOffset(List<List<Integer>> singleSequences) {
-        return 3; // todo
+    // 7, 9
+    private int getOffset(List<List<Integer>> singleSequences, int left) {
+        return singleSequences.size() / left; // todo
     }
 
     public List<List<Integer>> getSequencesToPersist(Map<List<Integer>, Integer> store) {
@@ -160,7 +112,7 @@ public class LaLa {
             int sequencesLeft = Math.min(15, singleSequences.size()) - mostCommon.size();
 
             if (sequencesLeft > 0) {
-                int offset = getOffset(singleSequences);
+                int offset = getOffset(singleSequences, sequencesLeft);
 
                 List<List<Integer>> selectedSingle = IntStream.range(0, sequencesLeft)
                         .mapToObj(i -> singleSequences.get(i * offset))
@@ -173,7 +125,7 @@ public class LaLa {
         return mostCommon;
     }
 
-    protected Stream<Map.Entry<List<Integer>, Integer>> getCommonSequences(Map<List<Integer>, Integer> store,
+    public Stream<Map.Entry<List<Integer>, Integer>> getCommonSequences(Map<List<Integer>, Integer> store,
                                                                            int repeatMin) {
         return store.entrySet().stream()
                 .filter(entry -> entry.getValue() >= repeatMin)
@@ -200,7 +152,7 @@ public class LaLa {
         HashMap<Integer, Integer> semiMap = new HashMap<>();
         List<Integer> semi = notes.stream().flatMap(Collection::stream)
                 .map(note -> note.interval % 12)
-                .filter(LaLa::isNoteSemi)
+                .filter(MusicProcessor::isNoteSemi)
                 .collect(Collectors.toList());
 
         semi.forEach(n -> semiMap.put(n, semiMap.getOrDefault(n, 0) + 1));
@@ -234,42 +186,6 @@ public class LaLa {
     private static boolean isNoteSemi(int note) {
         int rest = note % 12;
         return rest == 1 || rest == 3 || rest == 6 || rest == 8 || rest == 10;
-    }
-
-    private static List<NoteSeq> chordToNoteSeq(ChordSeq seq) {
-        return combineNotesStep(seq, 0);
-    }
-
-    private static List<NoteSeq> combineNotesStep(ChordSeq chords, int chordIndex) {
-        Set<Note> currChord = chords.get().get(chordIndex);
-
-        if (chordIndex == chords.get().size() - 1) {
-            return currChord.stream().map(n -> new NoteSeq(Collections.singletonList(n)))
-                    .collect(Collectors.toList());
-        }
-
-        List<NoteSeq> prevs = combineNotesStep(chords, chordIndex + 1);
-
-        return currChord.stream().flatMap(note -> prevs.stream().map(prSeq -> {
-            List<Note> conc = Stream.concat(Stream.of(note), prSeq.get().stream()).collect(Collectors.toList());
-            return new NoteSeq(conc);
-        })).collect(Collectors.toList());
-    }
-
-    private String formatInts(List<Integer> ints) {
-        return ints.stream().map(Object::toString)
-                .collect(Collectors.joining(", "));
-    }
-
-    private static ChordSeq normalizeTrack(ChordSeq track) {
-        track.chords = track.chords.stream()
-                .map(chord -> Collections.singletonList(chord.stream().max(Comparator.comparing(n -> n.interval)).get()))
-                .map(chord -> chord.stream()
-                        .map(note -> new Note(note.interval % 12, note.duration))
-                        .collect(Collectors.toSet()))
-                .collect(Collectors.toList());
-
-        return track;
     }
 
     public static List<NoteSeq> getSequences(ChordSeq track, Integer size) { // todo make one without shift to save???

@@ -1,5 +1,6 @@
 package com.kamennova.lala.persistence;
 
+import com.sun.source.tree.Tree;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
@@ -53,7 +54,7 @@ public class RedisPersistence implements Persistence {
 
     @Override
     public Map<String, Integer> findPiecesByNotePatterns(List<String> patterns,
-                                                             BiFunction<String, String, Integer> compFunc) {
+                                                         BiFunction<String, String, Integer> compFunc) {
         if (patterns.size() == 0) {
             return new HashMap<>();
         }
@@ -61,13 +62,9 @@ public class RedisPersistence implements Persistence {
         int patternSize = patterns.get(0).length();
         List<String> piecesNames = new ArrayList<>(jedis.smembers("pieces"));
 
-        String tempSearch = "tempSearch";
-        jedis.del(tempSearch);
-        patterns.forEach(p -> jedis.sadd(tempSearch, p));
-
         HashMap<String, Integer> piecesResult = new HashMap<>();
 
-        for (int i =0; i < piecesNames.size(); i++){
+        for (int i = 0; i < piecesNames.size(); i++) {
             String name = piecesNames.get(i);
             Set<String> existing = jedis.smembers(getPiecePatternKey(name, patternSize));
             Integer score = existing.stream()
@@ -79,13 +76,6 @@ public class RedisPersistence implements Persistence {
             }
         }
 
-       return piecesResult.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.naturalOrder()))
-                .limit(5)
-               .collect(Collectors.toMap(
-                       Map.Entry::getKey,
-                       Map.Entry::getValue,
-                       (prev, next) -> prev,
-                       HashMap::new));
+        return piecesResult;
     }
 }

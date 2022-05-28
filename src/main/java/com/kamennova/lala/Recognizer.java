@@ -7,9 +7,9 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
-public class Recognizer extends LaLa {
+public class Recognizer extends MusicProcessor {
     private static final Result NO_RESULT = new Result(null, 0F);
-    private BiFunction<String, String, Integer> rateFunc = LaLa::comparePatternsStrict;
+    private BiFunction<String, String, Integer> rateFunc = MusicProcessor::comparePatternsStrict;
 
     public Result process(ChordSeq track) {
         processInput(track);
@@ -32,7 +32,7 @@ public class Recognizer extends LaLa {
     public List<Result> recognizeByRhythm() {
         List<String> selected = getCommonSequences(new HashMap<>(), 2)
                 .filter(entry -> entry.getValue() > 1)
-                .map(entry -> LaLa.getPatternString(entry.getKey()))
+                .map(entry -> MusicProcessor.getPatternString(entry.getKey()))
                 .collect(Collectors.toList());
 
         Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
@@ -43,11 +43,20 @@ public class Recognizer extends LaLa {
 
     public List<Result> recognizeBySequence(Map<List<Integer>, Integer> store) {
         List<String> selected = getSequencesToPersist(store).stream() // todo rename func
-                .map(LaLa::getPatternString)
+                .map(MusicProcessor::getPatternString)
                 .collect(Collectors.toList());
 
         Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
-        return result.entrySet().stream()
+
+        List<Map.Entry<String, Integer>> list = new ArrayList<>(result.entrySet());
+        list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
+
+        Map<String, Integer> limited = new LinkedHashMap<>();
+        for (int i = 0; i < Math.min(5, list.size()); i++) {
+            limited.put(list.get(i).getKey(), list.get(i).getValue());
+        }
+
+        return limited.entrySet().stream()
                 .map(entry -> new Result(entry.getKey(), entry.getValue() + 0.0F))
                 .collect(Collectors.toList());
     }

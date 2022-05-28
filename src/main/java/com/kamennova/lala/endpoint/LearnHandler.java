@@ -66,7 +66,6 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         } else if (!this.currLearn.getPieceName().equals(pieceName)) {
             System.out.println("new");
             this.currLearn.finishLearn();
-            this.currLearn.clear();
             this.currLearn.setNewPiece(pieceName); // todo new entity ??
         } else {
             System.out.println("old");
@@ -85,12 +84,10 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         return null;
     }
 
-    private String validateParameters(Map<String, String> params) {
-        if (params.get("pathToFile") == null) {
-            return "Could not parse recording file";
-        } else if (params.get("pieceName") == null) {
+    private String validatePieceName(String pieceName) {
+        if (pieceName == null) {
             return "Piece name is required";
-        } else if (params.get("pieceName").length() < 2) {
+        } else if (pieceName.length() < 2) {
             return "Piece name should be at least 2 symbols long";
         }
 

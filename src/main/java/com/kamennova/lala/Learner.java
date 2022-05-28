@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Learner extends LaLa {
+public class Learner extends MusicProcessor {
     private short key;
     private short keyPrecision = 0;
     private String pieceName;
@@ -47,10 +47,10 @@ public class Learner extends LaLa {
 
     private void persistSequences(Map<List<Integer>, Integer> store) {
         List<List<Integer>> best = getSequencesToPersist(store);
-        best.forEach(seq -> this.persistence.addPattern(pieceName, LaLa.getPatternString(seq)));
+        best.forEach(seq -> this.persistence.addPattern(pieceName, MusicProcessor.getPatternString(seq)));
     }
 
-    public void clear() {
+    private void clear() {
         pieceName = null;
         store3 = new HashMap<>();
         store4 = new HashMap<>();
@@ -59,7 +59,7 @@ public class Learner extends LaLa {
     }
 
     public void setNewPiece(String pieceName) {
-//        this.clear();
+        this.clear();
         this.pieceName = pieceName;
     }
 }

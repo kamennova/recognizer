@@ -1,6 +1,9 @@
 import com.kamennova.lala.*;
 import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.RedisPersistence;
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.mp3.MP3AudioHeader;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
@@ -8,14 +11,14 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Performance extends BaseTest {
     private final String SEQUENCE3 = "sequence3";
     private final String SEQUENCE4 = "sequence4";
     private final String SEQUENCE5 = "sequence5";
-    private final String RHYTHM8 = "rhythm8";
 
-    private final List<String> dataOptions = Arrays.asList(SEQUENCE3, SEQUENCE4, SEQUENCE5, RHYTHM8);
+    private final List<String> dataOptions = Arrays.asList(SEQUENCE3, SEQUENCE4, SEQUENCE5);
     private final List<String> rateFuncOptions = Arrays.asList("strictlyEqual", "canSkip", "canDiff", "mixed");
 
     public void testBestFormat() {
@@ -24,6 +27,130 @@ public class Performance extends BaseTest {
 
     public void testSoundQualityRequired() {
         //
+    }
+
+    @Test
+    public void cutFull() {
+        this.persistence = new RedisPersistence();
+        File[] performanceFiles = new File("src/test/resources/performance/full").listFiles();
+
+        // learning
+        for (int i = 0; i < performanceFiles.length; i++) {
+            File recording = performanceFiles[i];
+
+            if (!recording.isFile()) {
+                continue;
+            }
+
+            try {
+                AudioFile audioFile = AudioFileIO.read(recording);
+                double duration = ((MP3AudioHeader) audioFile.getAudioHeader()).getPreciseTrackLength();
+
+                int limit = 90;
+                double cuts = Math.ceil(duration / limit);
+
+                for (int a = 0; a < cuts; a++) {
+                    int cutDur = a == cuts - 1 ? (int) (duration % limit) : limit;
+                    String cut = getCutFilename(recording.getPath(), a);
+                    AudioFileCutter.cutMp3File(a * limit, cutDur, recording.getPath(), cut);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Test
+    public void cutRandom() {
+        this.persistence = new RedisPersistence();
+
+        File[] performanceFiles = new File("src/test/resources/performance/full").listFiles();
+
+        // learning
+        for (int i = 0; i < performanceFiles.length; i++) {
+            File recording = performanceFiles[i];
+
+            if (!recording.isFile()) {
+                continue;
+            }
+
+            try {
+                AudioFile audioFile = AudioFileIO.read(recording);
+                double duration = ((MP3AudioHeader) audioFile.getAudioHeader()).getPreciseTrackLength();
+
+                long start = 10 + Math.round(Math.random() * Math.max(duration - 30, 0));
+                String cut = getCutFilename(recording.getPath(), null);
+                AudioFileCutter.cutMp3File((int) start, 15, recording.getPath(), cut);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Test
+    public void transcribeCut() {
+        this.persistence = new RedisPersistence();
+
+        File[] performanceFiles = new File("src/test/resources/performance/cut").listFiles();
+
+        for (int i = 0; i < performanceFiles.length; i++) {
+            File recording = performanceFiles[i];
+            String pieceName = getPieceName(recording.getName());
+
+            if (!recording.isFile() || i == 0) {
+                continue;
+            }
+            System.out.println(pieceName);
+
+            try {
+                String midiPath = getMidiPath(pieceName);
+                Mp3ToMidiTranscriber.transcribeToMidi(recording.getPath(), midiPath);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Test
+    public void transcribeRandom() {
+        this.persistence = new RedisPersistence();
+
+        File[] performanceFiles = new File("src/test/resources/performance/random").listFiles();
+
+        // learning
+        for (int i = 0; i < performanceFiles.length; i++) {
+            File recording = performanceFiles[i];
+            String pieceName = getPieceName(recording.getName());
+
+            if (!recording.isFile() || i == 0) {
+                continue;
+            }
+            System.out.println(pieceName);
+
+            try {
+                String midiPath = getMidiPath(pieceName);
+                Mp3ToMidiTranscriber.transcribeToMidi(recording.getPath(), midiPath);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private String getNameFromCut(String cut) {
+        String[] parts = cut.split("\\.");
+        return parts[0].substring(0, parts[0].length() - 5);
+    }
+
+    private Map<Integer, Integer> getStats(Stream<Map.Entry<List<Integer>, Integer>> storeStream) {
+        Map<Integer, Integer> res = new HashMap<>();
+        storeStream.forEach(entry -> {
+            Integer update = res.getOrDefault(entry.getValue(), 0) + 1;
+            res.put(entry.getValue(), update);
+        });
+
+        return res;
     }
 
     /**
@@ -43,58 +170,62 @@ public class Performance extends BaseTest {
     void testLearnAndRecognition() {
         this.persistence = new RedisPersistence();
 
-        File[] performanceFiles = new File("src/test/resources/performance/full").listFiles();
+        File[] performanceFiles = new File("src/test/resources/performance/mid").listFiles();
+        Arrays.sort(performanceFiles);
 
         // learning
         for (int i = 0; i < performanceFiles.length; i++) {
             File recording = performanceFiles[i];
-            String pieceName = getPieceName(recording.getName());
+            String pieceName = getNameFromCut(recording.getName());
 
             if (!recording.isFile()) {
                 continue;
             }
 
             try {
-                String cut = getCutFilename(recording.getPath());
-                AudioFileCutter.cutMp3File(0, 50, recording.getPath(), cut);
+                List<ChordSeq> tracks = MidiParser.getNotesFromMidi(recording.getPath());
+                ChordSeq track = MusicUtils.getNormalizedMelodyTrack(tracks);
 
-                String midiPath = getMidiPath(pieceName);
-                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
-                List<ChordSeq> tracks = MidiParser.getNotesFromMidi(midiPath);
-                ChordSeq track = LaLa.getNormalizedMelodyTrack(tracks);
-                System.out.println(track.chords.stream().map(n -> n.iterator().next().interval + " " +
-                        n.iterator().next().duration).collect(Collectors.toList()));
-
-                Learner learnEntity = getLearnEntity(recording.getName());
+                Learner learnEntity = getLearnEntity(pieceName);
                 int learnLevel = learnEntity.process(track);
-                LaLa.printRhythm(learnEntity.getRhythm());
-                learnEntity.finishLearn();
+
+                // learn stats
+                // notes in melody retrieved, length
+                // num of sequences > 2
+
+                Map<Integer, Integer> stats3 = getStats(learnEntity.getCommonSequences(learnEntity.getStore3(), 2));
+                Map<Integer, Integer> stats4 = getStats(learnEntity.getCommonSequences(learnEntity.getStore4(), 2));
+                Map<Integer, Integer> stats5 = getStats(learnEntity.getCommonSequences(learnEntity.getStore5(), 2));
+
+//                System.out.println(stats3);
+//                System.out.println(stats4);
+//                System.out.println(stats5);
+
+                if (i == performanceFiles.length - 1 || !performanceFiles[i + 1].getName().contains(pieceName)) {
+                    learnEntity.finishLearn();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
         // performance result
+        performanceFiles = new File("src/test/resources/performance/guess").listFiles();
         Map<String, List<List<PerformanceResult>>> results = new HashMap<>();
-/*
+        Arrays.sort(performanceFiles);
+
         for (int i = 0; i < performanceFiles.length; i++) {
             File recording = performanceFiles[i];
-            if (!recording.isFile()) {
+            if (!recording.isFile() || i > 0) {
                 continue;
             }
 
             try {
-                String cutFileName = getCutFilename(recording.getAbsolutePath());
-                int startSecond = (int) Math.round(Math.random() * 90);
-                System.out.println(startSecond);
-//                AudioFileCutter.cutMp3File(startSecond, 15, recording.getAbsolutePath(), cutFileName);
+                List<ChordSeq> tracks = MidiParser.getNotesFromMidi(recording.getPath());
+                ChordSeq track = MusicUtils.getNormalizedMelodyTrack(tracks);
+                String pieceName = getPieceName(recording.getName());
 
-                String midiPath = getMidiPath(getPieceName(recording.getName()));
-                //                Mp3ToMidiTranscriber.transcribeToMidi(cut, midiPath);
-                List<ChordSeqFull> tracks = MidiParser.getNotesFromMidi(midiPath);
-                ChordSeqFull track = LaLa.getNormalizedMelodyTrack(tracks);
-
-                Recognizer recognizeEntity = getRecognizeEntity(false);
+                Recognizer recognizeEntity = getRecognizeEntity(true);
                 recognizeEntity.processInput(track);
 
                 for (int d = 0; d < dataOptions.size(); d++) {
@@ -103,17 +234,14 @@ public class Performance extends BaseTest {
 
                     for (int r = 0; r < rateFuncOptions.size(); r++) {
                         String rate = rateFuncOptions.get(r);
-                        System.out.println("with rate function " + rate);
+                        System.out.println("=== with rate function " + rate);
 
                         recognizeEntity.setRateFunc(getRateFunc(rate));
-                        List<Recognizer.Result> pieceResults = new ArrayList<>();
+                        System.out.println(pieceName);
+                        List<Recognizer.Result> pieceResults = recognizer.recognizeBySequence(getStore(data, recognizeEntity));
+                        System.out.println(pieceResults.stream().map(entry -> (entry.pieceName.equals(pieceName) ?
+                              "+++" : "-") + " " + entry.precision).collect(Collectors.joining("\n")));
 
-                        if (data.equals(RHYTHM8)) {
-                            pieceResults = recognizer.recognizeByRhythm();
-                        } else {
-                            pieceResults = recognizer.recognizeBySequence(getStore(data, recognizeEntity));
-                        }
-System.out.println(pieceResults.get(0).pieceName + " " + pieceResults.get(0).precision);
                         List<PerformanceResult> converted = pieceResults.stream()
                                 .map(res -> new PerformanceResult(res.precision,
                                         res.pieceName.equals(recording.getName()),
@@ -134,22 +262,25 @@ System.out.println(pieceResults.get(0).pieceName + " " + pieceResults.get(0).pre
             }
 
         }
-*/
-        System.out.println(results);
     }
 
-    private String getCutFilename(String path) {
+    private String getCutFilename(String path, Integer index) {
+        String postfix = index == null ? "" : index + "";
         String[] parts = path.split(Pattern.quote(File.separator));
-        String filename = getPieceName(parts[parts.length - 1]) + "-tmp.mp3";
+        String filename = getPieceName(parts[parts.length - 1]) + "-tmp" + postfix + ".mp3";
 
         List<String> newParts = new ArrayList<>(Arrays.asList(parts)).subList(0, parts.length - 2);
-        newParts.add("cut");
+        newParts.add("random");
         newParts.add(filename);
         return String.join(File.separator, newParts);
     }
 
+    private String getCutFilename(String path) {
+        return getCutFilename(path, null);
+    }
+
     private String getMidiPath(String pieceName) {
-        return "src/test/resources/performance/mid/" + pieceName + ".mid";
+        return "src/test/resources/performance/guess/" + pieceName + ".mid";
     }
 
     private String getPostCutFilename(String path) {
@@ -170,15 +301,15 @@ System.out.println(pieceResults.get(0).pieceName + " " + pieceResults.get(0).pre
     private BiFunction<String, String, Integer> getRateFunc(String funcName) {
         switch (funcName) {
             case "strictlyEqual":
-                return LaLa::comparePatternsStrict;
+                return MusicProcessor::comparePatternsStrict;
             case "canSkip":
-                return LaLa::comparePatternsSkip;
+                return MusicProcessor::comparePatternsSkip;
             case "canDiff":
-                return LaLa::comparePatternsDiff;
+                return MusicProcessor::comparePatternsDiff;
             case "mixed":
-                return LaLa::comparePatternsMixed;
+                return MusicProcessor::comparePatternsMixed;
             default:
-                return LaLa::comparePatternsStrict;
+                return MusicProcessor::comparePatternsStrict;
         }
     }
 

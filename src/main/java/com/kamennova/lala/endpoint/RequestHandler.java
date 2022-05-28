@@ -56,7 +56,7 @@ public class RequestHandler {
 //            Mp3ToMidiTranscriber.transcribeToMidi(pathToRecording);
             String inputPath = "src/main/resources/Path1.mid";
             List<ChordSeq> tracks = MidiParser.getNotesFromMidi(inputPath);
-            return LaLa.getNormalizedMelodyTrack(tracks);
+            return MusicUtils.getNormalizedMelodyTrack(tracks);
         } catch (Exception e) {
             System.out.println(e);
         }

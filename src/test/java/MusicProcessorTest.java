@@ -1,6 +1,7 @@
-import com.kamennova.lala.LaLa;
+import com.kamennova.lala.MusicProcessor;
 import com.kamennova.lala.Learner;
 import com.kamennova.lala.MidiParser;
+import com.kamennova.lala.MusicUtils;
 import com.kamennova.lala.common.ChordSeq;
 import org.junit.jupiter.api.Test;
 
@@ -17,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
     • rhythm — getRhythm
     • rhythm — getRSequences
  */
-public class LaLaTest extends BaseTest {
+public class MusicProcessorTest extends BaseTest {
     @Test
     void getSequencesTest() {
 
@@ -28,7 +29,7 @@ public class LaLaTest extends BaseTest {
     void testSequencesCleanMidi() throws Exception {
         String inputPath = "src/main/resources/lmlyd.mid";
         List<ChordSeq> tracks = MidiParser.getNotesFromMidi(inputPath);
-        ChordSeq track = LaLa.getNormalizedMelodyTrack(tracks);
+        ChordSeq track = MusicUtils.getNormalizedMelodyTrack(tracks);
 
         Learner learnEntity = getLearnEntity("lmlyd");
         learnEntity.process(track);
@@ -47,7 +48,7 @@ public class LaLaTest extends BaseTest {
     void testSequencesTranscribedMidi() throws Exception {
         String inputPath = "src/main/resources/samples/when_the_love.mid";
         List<ChordSeq> tracks = MidiParser.getNotesFromMidiStaccato(inputPath);
-        ChordSeq track = LaLa.getNormalizedMelodyTrack(tracks);
+        ChordSeq track = MusicUtils.getNormalizedMelodyTrack(tracks);
 
         Learner learnEntity = getLearnEntity("when_the_love");
         learnEntity.process(track);

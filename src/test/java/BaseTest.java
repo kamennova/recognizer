@@ -14,7 +14,6 @@ public class BaseTest {
             this.currLearn = new Learner(pieceName, persistence);
         } else if (!this.currLearn.getPieceName().equals(pieceName)) {
             this.currLearn.finishLearn();
-            this.currLearn.clear();
             this.currLearn.setNewPiece(pieceName);
         }
 
@@ -30,6 +29,7 @@ public class BaseTest {
 //            prevRecognizer = this.recognizer;
 //            this.recognizer = new Recognizer(persistence);
 //        }
+       this.recognizer = new Recognizer(persistence);
 
        return recognizer;
     }
