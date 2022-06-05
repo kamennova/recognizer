@@ -8,6 +8,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 
 public class RecognizeHandler extends RequestHandler implements HttpHandler {
     Recognizer recognizer;
@@ -56,8 +57,8 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
                 ChordSeq track = getTrackFromAudioInput(pathToFile);
                 updateRecognizeEntity(false);
 
-                Recognizer.Result result = this.recognizer.process(track);
-                handleResponse(httpExchange, resultToJson(result));
+                List<Recognizer.Result> result = this.recognizer.process(track);
+                handleResponse(httpExchange, resultToJson(result.get(0)));
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -8,37 +8,12 @@ import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 public class Recognizer extends MusicProcessor {
-    private static final Result NO_RESULT = new Result(null, 0F);
-    private BiFunction<String, String, Integer> rateFunc = MusicProcessor::comparePatternsStrict;
+    private BiFunction<String, String, Double> rateFunc = MusicProcessor::comparePatternsStrict;
 
-    public Result process(ChordSeq track) {
+    public List<Result> process(ChordSeq track) {
         processInput(track);
-
-        System.out.println(store3.size());
-
-        HashMap<String, Integer> piecesResult = new HashMap<>();
-//        HashMap<String, Integer> piecesResult = recognizeBySequence(store3);
-
-        if (piecesResult.size() == 0) { // todo or else
-            return NO_RESULT;
-        }
-
-        Map.Entry<String, Integer> piece = piecesResult.entrySet().stream()
-                .min(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .get();
-        return new Result(piece.getKey(), (float) piece.getValue() + 0.0F);
-    }
-
-    public List<Result> recognizeByRhythm() {
-        List<String> selected = getCommonSequences(new HashMap<>(), 2)
-                .filter(entry -> entry.getValue() > 1)
-                .map(entry -> MusicProcessor.getPatternString(entry.getKey()))
-                .collect(Collectors.toList());
-
-        Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
-        return result.entrySet().stream()
-                .map(entry -> new Result(entry.getKey(), entry.getValue() + 0.0F))
-                .collect(Collectors.toList());
+        List<Result> piecesResult = recognizeMixed();
+        return piecesResult;
     }
 
     public List<Result> recognizeBySequence(Map<List<Integer>, Integer> store) {
@@ -46,22 +21,63 @@ public class Recognizer extends MusicProcessor {
                 .map(MusicProcessor::getPatternString)
                 .collect(Collectors.toList());
 
-        Map<String, Integer> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
+        Map<String, Double> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
 
-        List<Map.Entry<String, Integer>> list = new ArrayList<>(result.entrySet());
+        List<Map.Entry<String, Double>> list = new ArrayList<>(result.entrySet());
         list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
 
-        Map<String, Integer> limited = new LinkedHashMap<>();
-        for (int i = 0; i < Math.min(5, list.size()); i++) {
+        Map<String, Double> limited = new LinkedHashMap<>();
+        for (int i = 0; i < list.size(); i++) {
             limited.put(list.get(i).getKey(), list.get(i).getValue());
         }
 
         return limited.entrySet().stream()
-                .map(entry -> new Result(entry.getKey(), entry.getValue() + 0.0F))
+                .map(entry -> new Result(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toList());
     }
 
-    public void setRateFunc(BiFunction<String, String, Integer> func) {
+    private double rateMixed(String base, String second) {
+        double rate1 = MusicProcessor.comparePatternsDiff(base, second);
+        double rate2 = MusicProcessor.comparePatternsSkip(base, second);
+        double rateEqual = MusicProcessor.comparePatternsStrict(base, second);
+
+        return rate2 * 1.5 + rate1; // 54.761904761904766 21.428571428571427
+    }
+
+    public List<Result> recognizeMixed() {
+        setRateFunc(this::rateMixed);
+        return recognizeBySequence(store3);
+//        List<String> selected = getSequencesToPersist(this.store3).stream() // todo rename func
+//                .map(MusicProcessor::getPatternString)
+//                .collect(Collectors.toList());
+//
+//        Map<String, Double> result = persistence.findPiecesByNotePatterns(selected, rateFunc);
+//
+//        List<Map.Entry<String, Double>> list = new ArrayList<>(result.entrySet());
+//        list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
+//
+//        Map<String, Double> limited = new LinkedHashMap<>();
+//        for (int i = 0; i < list.size(); i++) {
+//            limited.put(list.get(i).getKey(), list.get(i).getValue());
+//        }
+//
+//        return limited.entrySet().stream()
+//                .map(entry -> new Result(entry.getKey(), entry.getValue()))
+//                .collect(Collectors.toList());
+    }
+
+//    public List<Result> getLimitedResults(){
+//        Map<String, Double> limited = new LinkedHashMap<>();
+//        for (int i = 0; i < Math.min(5, list.size()); i++) {
+//            limited.put(list.get(i).getKey(), list.get(i).getValue());
+//        }
+//
+//        return limited.entrySet().stream()
+//                .map(entry -> new Result(entry.getKey(), entry.getValue()))
+//                .collect(Collectors.toList());
+//    }
+
+    public void setRateFunc(BiFunction<String, String, Double> func) {
         this.rateFunc = func;
     }
 
@@ -71,9 +87,9 @@ public class Recognizer extends MusicProcessor {
 
     public static class Result {
         public String pieceName;
-        public Float precision;
+        public Double precision;
 
-        Result(String name, Float p) {
+        Result(String name, Double p) {
             pieceName = name;
             precision = p;
         }

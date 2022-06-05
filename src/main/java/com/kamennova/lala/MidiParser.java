@@ -20,9 +20,9 @@ import static javax.sound.midi.ShortMessage.NOTE_ON;
 // todo speed optimizations
 public class MidiParser {
     // notes within interval of this number of ticks considered to be fired at the same time
-    private static final int tickPrecision = 13; // todo dynamic?
+    public static final int tickPrecision = 13; // todo dynamic?
 
-    private static boolean arePlayedSimultaneously(long tick1, long tick2) {
+    public static boolean arePlayedSimultaneously(long tick1, long tick2) {
         return Math.abs(tick1 - tick2) <= tickPrecision;
     }
 
@@ -44,7 +44,7 @@ public class MidiParser {
      * @return
      * @throws Exception
      */
-    public static List<ChordSeq> getNotesFromMidi(String fileName, boolean isLegato) throws Exception {
+    public static List<ChordSeq> getNotesFromMidiLegato(String fileName) throws Exception {
         var sequence = MidiSystem.getSequence(new File(fileName));
 
         List<ChordSeq> tracks = new ArrayList<>();
@@ -89,11 +89,11 @@ public class MidiParser {
 
                 if (!arePlayedSimultaneously(currTick, lastTick)) {
                     if (isNoteOn) {
-                        flushChord(currKeys, notes, Math.toIntExact(lastTick - currTick), isLegato);
+                        flushChord(currKeys, notes, Math.toIntExact(lastTick - currTick), true);
                     } else if (isNoteOff) {
                         // play if contains key not flushed before
                         if (currKeys.containsValue(lastTick)) {
-                            flushChord(currKeys, notes, Math.toIntExact(lastTick - currTick), isLegato);
+                            flushChord(currKeys, notes, Math.toIntExact(lastTick - currTick), true);
                         }
                     }
 

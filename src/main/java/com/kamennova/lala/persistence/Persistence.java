@@ -5,13 +5,13 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 public interface Persistence {
-    public void addPiece(String name);
+    void addPiece(String name);
 
-    public void addPattern(String pieceName, String pattern);
+    void addPattern(String pieceName, String pattern);
 
-    public List<String> findPiecesWithPattern(String pattern, BiFunction<String, String, Integer> compFunc);
+    Map<String, Double> findPiecesByNotePatterns(List<String> patterns, BiFunction<String, String, Double> compFunc);
 
-    public Map<String, Integer> findPiecesByNotePatterns(List<String> patterns, BiFunction<String, String, Integer> compFunc);
+    void clearAll();
 
-//    public HashMap<String, Integer> findPiecesWithRhythm(List<List<Integer>> patterns);
+    boolean pieceExists(String name);
 }

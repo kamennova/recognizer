@@ -1,17 +1,20 @@
 package com.kamennova.lala.persistence;
 
-import com.sun.source.tree.Tree;
 import redis.clients.jedis.Jedis;
 
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class RedisPersistence implements Persistence {
 
     public static final String NAME_COLUMN = "name";
+    public static final String PIECE_SET = "pieces";
     Jedis jedis;
+
+    public Jedis getJedis() {
+        return this.jedis;
+    }
 
     public RedisPersistence() {
         this.jedis = new Jedis();
@@ -24,10 +27,15 @@ public class RedisPersistence implements Persistence {
 
     @Override
     public void addPiece(String name) {
-        String key = newPieceKey();
-        jedis.sadd("pieces", name);
-//        jedis.hset(name, NAME_COLUMN, name);
-        // todo key?
+        if (pieceExists(name)) {
+            throw new RuntimeException("Piece with name " + name + " already exists");
+        }
+
+        jedis.sadd(PIECE_SET, name);
+    }
+
+    public boolean pieceExists(String name) {
+        return jedis.sismember(PIECE_SET, name);
     }
 
     private String getPiecePatternKey(String pieceName, int size) {
@@ -36,40 +44,31 @@ public class RedisPersistence implements Persistence {
 
     @Override
     public void addPattern(String pieceName, String pattern) {
+        if (!pieceExists(pieceName)) {
+            throw new RuntimeException("Piece with name " + pieceName + " does not exist");
+        }
+
         String patternPieceKey = getPiecePatternKey(pieceName, pattern.length());
         jedis.sadd(patternPieceKey, pattern);
     }
 
     @Override
-    public List<String> findPiecesWithPattern(String pattern, BiFunction<String, String, Integer> compFunc) {
-        Set<String> piecesNames = jedis.smembers("pieces");
-        System.out.println("members");
-        String patternKey = getPiecePatternKey(piecesNames.iterator().next(), pattern.length());
-        System.out.println(jedis.smembers(patternKey));
-
-        return piecesNames.stream()
-                .filter(name -> jedis.sismember(patternKey, pattern))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public Map<String, Integer> findPiecesByNotePatterns(List<String> patterns,
-                                                         BiFunction<String, String, Integer> compFunc) {
+    public Map<String, Double> findPiecesByNotePatterns(List<String> patterns,
+                                                        BiFunction<String, String, Double> compFunc) {
         if (patterns.size() == 0) {
             return new HashMap<>();
         }
 
         int patternSize = patterns.get(0).length();
-        List<String> piecesNames = new ArrayList<>(jedis.smembers("pieces"));
+        List<String> piecesNames = new ArrayList<>(jedis.smembers(PIECE_SET));
 
-        HashMap<String, Integer> piecesResult = new HashMap<>();
+        HashMap<String, Double> piecesResult = new HashMap<>();
 
-        for (int i = 0; i < piecesNames.size(); i++) {
-            String name = piecesNames.get(i);
+        for (String name : piecesNames) {
             Set<String> existing = jedis.smembers(getPiecePatternKey(name, patternSize));
-            Integer score = existing.stream()
-                    .map(str -> patterns.stream().map(base -> compFunc.apply(base, str)).reduce(0, Integer::sum))
-                    .reduce(0, Integer::sum);
+            Double score = existing.stream()
+                    .map(str -> patterns.stream().map(base -> compFunc.apply(base, str)).reduce(0D, Double::sum))
+                    .reduce(0D, Double::sum);
 
             if (score > 0) {
                 piecesResult.put(name, score);
@@ -77,5 +76,10 @@ public class RedisPersistence implements Persistence {
         }
 
         return piecesResult;
+    }
+
+    @Override
+    public void clearAll() {
+        jedis.flushAll();
     }
 }

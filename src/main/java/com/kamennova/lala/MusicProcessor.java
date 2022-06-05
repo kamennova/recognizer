@@ -45,11 +45,46 @@ public class MusicProcessor {
                 StringBuilder::toString));
     }
 
-    public static int comparePatternsStrict(String base, String second) {
+    public static double comparePatternsStrict(String base, String second) {
         return base.equals(second) ? 1 : 0;
     }
 
-    public static int comparePatternsSkip(String base, String second) {
+    // ex (abcd, abdf) -> 1 skip
+    //
+    public static double comparePatternsSkip(String base, String second) {
+        int skipInBase = 0;
+        int skipInSecond = 0;
+        int len = base.length();
+
+        for (int i = 0; i < len; i++) {
+            int baseIndex = i + skipInBase;
+            int secondIndex = i + skipInSecond;
+
+            if (base.charAt(baseIndex) != second.charAt(secondIndex)) {
+                // i = 1, base = abcd, second = acdf
+                if (base.length() > baseIndex+1 && base.charAt(baseIndex+1) == second.charAt(secondIndex)){
+                    skipInBase++;
+                    len--;
+                } else if (second.length() > secondIndex + 1 && base.charAt(baseIndex) == second.charAt(secondIndex+1)) {
+                    skipInSecond++;
+                    len--;
+                } else {
+                    return 0;
+                }
+            }
+
+            if (skipInBase + skipInSecond > 1) {
+                return 0;
+            }
+        }
+
+        return base.length() - (skipInBase + skipInSecond) * 2;
+    }
+
+    // ex: (abcd, abcd) -> 4
+    // (abcd, abfd) -> 2
+    // (abcd, abpt) -> 0
+    public static double comparePatternsDiff(String base, String second) {
         int diff = 0;
         for (int i = 0; i < base.length(); i++) {
             if (base.charAt(i) != second.charAt(i)) {
@@ -61,25 +96,10 @@ public class MusicProcessor {
             }
         }
 
-        return 3 - diff;
+        return base.length() - diff * 2;
     }
 
-    public static int comparePatternsDiff(String base, String second) {
-        int diff = 0;
-        for (int i = 0; i < base.length(); i++) {
-            if (base.charAt(i) != second.charAt(i)) {
-                diff++;
-            }
-
-            if (diff == 2) {
-                return 0;
-            }
-        }
-
-        return 3 - diff;
-    }
-
-    public static int comparePatternsMixed(String base, String second) {
+    public static double comparePatternsMixed(String base, String second) {
         return base.equals(second) ? 1 : 0;
     }
 

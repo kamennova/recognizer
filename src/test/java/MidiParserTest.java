@@ -3,12 +3,15 @@ import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.common.Note;
 import org.junit.jupiter.api.Test;
 
+import javax.sound.midi.InvalidMidiDataException;
+import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class MidiParserTest {
     @Test
@@ -60,5 +63,30 @@ public class MidiParserTest {
                 assertThat(expectedChords.get(i)).containsExactlyInAnyOrderElementsOf(track.chords.get(i))
         );
 
+    }
+
+    @Test
+    void testIsPlayedSimultaneously(){
+        assertThat(MidiParser.arePlayedSimultaneously(1, 1)).isTrue();
+        assertThat(MidiParser.arePlayedSimultaneously(1, 14)).isTrue();
+        assertThat(MidiParser.arePlayedSimultaneously(1, 22)).isFalse();
+    }
+
+    @Test
+    void testGetNotesFromMidi_nonexistent(){
+        Exception e = assertThrows(FileNotFoundException.class, () -> MidiParser.getNotesFromMidi("nonexistent"));
+        assertThat(e.getMessage()).contains("nonexistent");
+    }
+
+    @Test
+    void testGetNotesFromMidi_nonMidi(){
+        Exception e = assertThrows(InvalidMidiDataException.class, () -> MidiParser.getNotesFromMidi("src/test/resources/performance/full/greensleeves.mp3"));
+        assertThat(e.getMessage()).contains("could not get sequence from file");
+    }
+
+    @Test
+    void getGetNotesFromMidi_emptyFile() throws Exception {
+        List<ChordSeq> seq = MidiParser.getNotesFromMidi("src/test/resources/empty.mid");
+        assertThat(seq.isEmpty());
     }
 }
