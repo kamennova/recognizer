@@ -1,4 +1,4 @@
-package com.kamennova;
+package com.kamennova.old;
 
 public class Note extends Basis {
     public Short pitch;

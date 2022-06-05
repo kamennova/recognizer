@@ -1,11 +1,14 @@
+package system;
+
 import com.kamennova.lala.*;
 import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.RedisPersistence;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.mp3.MP3AudioHeader;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import unit.AudioFileCutter;
+import unit.BaseTest;
 
 import java.io.File;
 import java.util.*;
@@ -28,15 +31,6 @@ public class Performance extends BaseTest {
 
     public void testSoundQualityRequired() {
         //
-    }
-
-    @Test
-    public void testComparison(){
-        Assertions.assertEquals(MusicProcessor.comparePatternsSkip("abcd", "abcd"), 4);
-        Assertions.assertEquals(MusicProcessor.comparePatternsSkip("abcd", "aesd"), 0);
-        Assertions.assertEquals(MusicProcessor.comparePatternsSkip("abcd", "acde"), 2);
-        Assertions.assertEquals(MusicProcessor.comparePatternsSkip("acdf", "abcd"), 2);
-        Assertions.assertEquals(MusicProcessor.comparePatternsSkip("abcd", "abcd"), 4);
     }
 
     @Test

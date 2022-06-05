@@ -20,8 +20,8 @@ public class APIEndpoint {
     public static void main(String[] args) throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 8001), 0);
         Persistence persistence = new RedisPersistence();
-        server.createContext("/learn", new LearnHandler(persistence));
-        server.createContext("/recognize", new RecognizeHandler(persistence));
+        server.createContext("/api/learn", new LearnHandler(persistence));
+        server.createContext("/api/recognize", new RecognizeHandler(persistence));
         server.start();
     }
 }

@@ -1,6 +1,8 @@
 package com.kamennova.lala.endpoint;
 
-import com.kamennova.lala.*;
+import com.kamennova.lala.MidiParser;
+import com.kamennova.lala.Mp3ToMidiTranscriber;
+import com.kamennova.lala.MusicUtils;
 import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.Persistence;
 import com.sun.net.httpserver.HttpExchange;
@@ -9,11 +11,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class RequestHandler {
     protected Persistence persistence;
+    protected static final String PIECE_NAME_PROPERTY = "pieceName";
 
     RequestHandler(Persistence p) {
         persistence = p;
@@ -23,8 +27,22 @@ public class RequestHandler {
 
     }
 
+    protected String validatePieceName(String pieceName) {
+        if (pieceName == null) {
+            return "Piece name is required";
+        } else if (pieceName.length() < 2) {
+            return "Piece name should be at least 2 symbols long";
+        }
+
+        return null;
+    }
+
     private String getDownloadFilePath() {
         return "src/main/resources/upload.mp3";
+    }
+
+    private String getMidiFilePath() {
+        return "src/main/resources/upload.mid";
     }
 
     protected String downloadRecording(InputStream body) throws IOException {
@@ -42,31 +60,42 @@ public class RequestHandler {
 
     // downloads file also
     protected Map<String, String> getBodyParameters(InputStream body) throws Exception {
-        MyFileUpload upload = new MyFileUpload(body,
-                "src/main/resources/upload.mp3");
-        return upload.getParameters();
+        return new BodyParser(body).getParameters();
+    }
+
+
+    public static Map<String, String> getURIParameters(HttpExchange http) {
+        String query = http.getRequestURI().getQuery();
+        Map<String, String> map = new HashMap<>();
+
+        if (query == null) {
+            return map;
+        }
+        String[] params = query.split("&");
+
+        for (String param : params) {
+            String name = param.split("=")[0];
+            String value = param.split("=")[1];
+            map.put(name, value);
+        }
+        return map;
     }
 
     protected String getErrorString(String message) {
         return "{\"error\": \"" + message + "\"}";
     }
 
-    protected ChordSeq getTrackFromAudioInput(String pathToRecording) {
-        try {
-//            Mp3ToMidiTranscriber.transcribeToMidi(pathToRecording);
-            String inputPath = "src/main/resources/Path1.mid";
-            List<ChordSeq> tracks = MidiParser.getNotesFromMidi(inputPath);
-            return MusicUtils.getNormalizedMelodyTrack(tracks);
-        } catch (Exception e) {
-            System.out.println(e);
-        }
-
-        return null;
+    protected ChordSeq getTrackFromAudioInput(HttpExchange httpExchange) throws Exception {
+        String pathToFile = downloadRecording(httpExchange.getRequestBody());
+        String midiPath = getMidiFilePath();
+        Mp3ToMidiTranscriber.transcribeToMidi(pathToFile, midiPath);
+        List<ChordSeq> tracks = MidiParser.getNotesFromMidi(midiPath);
+        return MusicUtils.getNormalizedMelodyTrack(tracks);
     }
 
-    protected void handleResponse(HttpExchange httpExchange, String response) throws IOException {
+    protected void handleResponse(HttpExchange httpExchange, int code, String response) throws IOException {
         httpExchange.getResponseHeaders().set("Content-Type", "application/json");
-        httpExchange.sendResponseHeaders(200, response.length());
+        httpExchange.sendResponseHeaders(code, response.length());
         OutputStream os = httpExchange.getResponseBody();
         os.write(response.getBytes());
         os.close();

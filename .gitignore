@@ -2,3 +2,6 @@
 /bac
 /out
 /target
+/src/test/resources
+/test/resources
+/test/cypress/node_modules

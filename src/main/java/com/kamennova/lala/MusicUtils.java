@@ -10,12 +10,16 @@ import java.util.stream.Collectors;
 
 public class MusicUtils {
     public static ChordSeq getNormalizedMelodyTrack(List<ChordSeq> tracks) { // todo no separate func??
+        if (tracks.isEmpty()) {
+            return new ChordSeq(Collections.emptyList());
+        }
+
         ChordSeq melodyTrack = tracks.size() == 1 ? separateMelodyPart(tracks.get(0)) :
                 getMelodyTrack(tracks);
         return normalizeTrack(melodyTrack);
     }
 
-    private static ChordSeq normalizeTrack(ChordSeq track) {
+    public static ChordSeq normalizeTrack(ChordSeq track) {
         track.chords = track.chords.stream()
                 .map(chord -> Collections.singletonList(chord.stream().max(Comparator.comparing(n -> n.interval)).get()))
                 .map(chord -> chord.stream()
@@ -26,7 +30,7 @@ public class MusicUtils {
         return track;
     }
 
-    private static ChordSeq separateMelodyPart(ChordSeq track) {
+    public static ChordSeq separateMelodyPart(ChordSeq track) {
         double avgKey = getAvgKey(track); // todo hands reach
         short min = track.chords.stream().flatMap(notes -> notes.stream().map(n -> n.interval))
                 .min(Comparator.comparing(Integer::valueOf))
@@ -41,7 +45,7 @@ public class MusicUtils {
         return track;
     }
 
-    private static ChordSeq getMelodyTrack(List<ChordSeq> tracks) {
+    public static ChordSeq getMelodyTrack(List<ChordSeq> tracks) {
         ChordSeq highest = tracks.get(0);
         double highestMid = 0;
 
@@ -57,7 +61,7 @@ public class MusicUtils {
         return highest;
     }
 
-    private static double getAvgKey(ChordSeq track) {
+    public static double getAvgKey(ChordSeq track) {
         return track.chords.stream()
                 .map(chord -> (chord.stream()
                         .map(note -> (int) note.interval).reduce(0, Integer::sum) + 0.0) / chord.size())

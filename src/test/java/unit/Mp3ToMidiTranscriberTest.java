@@ -1,3 +1,5 @@
+package unit;
+
 import com.kamennova.lala.Mp3ToMidiTranscriber;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -39,8 +41,16 @@ public class Mp3ToMidiTranscriberTest {
         assertThat(new File(output).exists()).isFalse();
     }
 
+    @Test
+    void testTranscription_silence() throws IOException, InterruptedException {
+        String output = "src/test/resources/temp/silence.mid";
+        Mp3ToMidiTranscriber.transcribeToMidi("src/test/resources/silence.mp3", output);
+        assertThat(new File(output).exists()).isTrue();
+    }
+
     @AfterAll
     static void afterAll() {
         new File("src/test/resources/temp/success.mid").delete();
+        new File("src/test/resources/temp/silence.mid").delete();
     }
 }

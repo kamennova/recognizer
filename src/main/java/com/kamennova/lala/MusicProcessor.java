@@ -38,11 +38,42 @@ public class MusicProcessor {
     protected List<List<Integer>> rhythmStore = new ArrayList<>();
 
     public static String getPatternString(List<Integer> pattern) {
-        return pattern.stream().map(note -> ((char) (65 + note))).collect(Collector.of(
+        return pattern.stream().map(MusicProcessor::getNoteChar).collect(Collector.of(
                 StringBuilder::new,
                 StringBuilder::append,
                 StringBuilder::append,
                 StringBuilder::toString));
+    }
+
+    private static char getNoteChar(Integer note) {
+        switch (note) {
+            case 0:
+                return 'c';
+            case 2:
+                return 'd';
+            case 4:
+                return 'e';
+            case 5:
+                return 'f';
+            case 7:
+                return 'g';
+            case 9:
+                return 'a';
+            case 11:
+                return 'b';
+            case 1:
+                return 'C';
+            case 3:
+                return 'D';
+            case 6:
+                return 'F';
+            case 8:
+                return 'G';
+            case 10:
+                return 'A';
+            default:
+                return ' ';
+        }
     }
 
     public static double comparePatternsStrict(String base, String second) {
@@ -62,10 +93,10 @@ public class MusicProcessor {
 
             if (base.charAt(baseIndex) != second.charAt(secondIndex)) {
                 // i = 1, base = abcd, second = acdf
-                if (base.length() > baseIndex+1 && base.charAt(baseIndex+1) == second.charAt(secondIndex)){
+                if (base.length() > baseIndex + 1 && base.charAt(baseIndex + 1) == second.charAt(secondIndex)) {
                     skipInBase++;
                     len--;
-                } else if (second.length() > secondIndex + 1 && base.charAt(baseIndex) == second.charAt(secondIndex+1)) {
+                } else if (second.length() > secondIndex + 1 && base.charAt(baseIndex) == second.charAt(secondIndex + 1)) {
                     skipInSecond++;
                     len--;
                 } else {
@@ -146,7 +177,7 @@ public class MusicProcessor {
     }
 
     public Stream<Map.Entry<List<Integer>, Integer>> getCommonSequences(Map<List<Integer>, Integer> store,
-                                                                           int repeatMin) {
+                                                                        int repeatMin) {
         return store.entrySet().stream()
                 .filter(entry -> entry.getValue() >= repeatMin)
                 .sorted(java.util.Map.Entry.comparingByValue(Comparator.reverseOrder()));
@@ -168,7 +199,7 @@ public class MusicProcessor {
         log("rhythm", r.stream().map(("-")::repeat).collect(Collectors.joining(" ")));
     }
 
-    private static Tonality getTonality(List<List<Note>> notes) {
+    public static Tonality getTonality(List<List<Note>> notes) {
         HashMap<Integer, Integer> semiMap = new HashMap<>();
         List<Integer> semi = notes.stream().flatMap(Collection::stream)
                 .map(note -> note.interval % 12)
@@ -192,7 +223,7 @@ public class MusicProcessor {
         return best;
     }
 
-    private static double getTonalityScore(Tonality tonality, List<Integer> semi) {
+    public static double getTonalityScore(Tonality tonality, List<Integer> semi) {
         // 1. how much out of them contains (percent)
         // 2. how much in semi and not in sharps (percent to semi)
 
@@ -203,7 +234,7 @@ public class MusicProcessor {
         return tonalityPercent - semiOutPercent;
     }
 
-    private static boolean isNoteSemi(int note) {
+    public static boolean isNoteSemi(int note) {
         int rest = note % 12;
         return rest == 1 || rest == 3 || rest == 6 || rest == 8 || rest == 10;
     }
@@ -225,7 +256,7 @@ public class MusicProcessor {
         return seqs;
     }
 
-    private static boolean areAllNotesSame(NoteSeq notes) {
+    public static boolean areAllNotesSame(NoteSeq notes) {
         return notes.notes.stream().map(n -> n.interval).distinct().count() == 1;
     }
 

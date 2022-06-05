@@ -1,3 +1,5 @@
+package unit;
+
 import com.kamennova.lala.Learner;
 import com.kamennova.lala.Recognizer;
 import com.kamennova.lala.persistence.Persistence;

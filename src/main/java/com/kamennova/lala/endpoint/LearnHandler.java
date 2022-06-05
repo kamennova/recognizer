@@ -7,19 +7,17 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class LearnHandler extends RequestHandler implements HttpHandler {
-    Learner currLearn;
+    List<Learner> learners = new ArrayList<>();
     String currPieceName;
-    private static final String PIECE_NAME_PROPERTY = "pieceName";
+    private static final int TRACK_SIZE_MIN = 10;
 
     LearnHandler(Persistence p) {
         super(p);
-    }
-
-    private boolean isStartRequest(HttpExchange httpExchange) {
-        return httpExchange.getRequestURI().toString().contains("start");
     }
 
     @Override
@@ -28,50 +26,50 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         String error = validateRequest(httpExchange);
 
         if (error != null) {
-            handleResponse(httpExchange, getErrorString(error));
+            handleResponse(httpExchange, 400, getErrorString(error));
             return;
         }
 
-        if (isStartRequest(httpExchange)) {
-            try {
-                Map<String, String> params = getBodyParameters(httpExchange.getRequestBody());
-                this.currPieceName = params.get(PIECE_NAME_PROPERTY);
+        String pieceName = getURIParameters(httpExchange).get(PIECE_NAME_PROPERTY);
+        String pieceErr = validatePieceName(pieceName);
 
-                handleResponse(httpExchange, "{\"status\": \"ok\"}");
-                return;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+        if (pieceErr != null) {
+            handleResponse(httpExchange, 400, getErrorString(pieceErr));
+            return;
         }
 
+        this.currPieceName = pieceName;
+        Learner learnEntity = getLearnEntity(currPieceName);
+
         try {
-            String pathToFile = downloadRecording(httpExchange.getRequestBody());
-            ChordSeq track = getTrackFromAudioInput(pathToFile); // todo single method?
-            Learner learnEntity = getLearnEntity(currPieceName);
+            ChordSeq track = getTrackFromAudioInput(httpExchange);
+
+            if (track.chords.size() <= TRACK_SIZE_MIN) {
+                handleResponse(httpExchange, 200,
+                        "{\"message\": \"Not enough sounds recorded, please check your microphone\", \"isSuccess\": false}");
+                return;
+            }
 
             int learnLevel = learnEntity.process(track);
             learnEntity.finishLearn(); // todo remove
 
-            String jsonRes = "{\"level\": " + learnLevel + "}";
-            handleResponse(httpExchange, jsonRes);
+            String jsonRes = "{\"isSuccess\": true, \"level\": " + learnLevel + "}";
+            handleResponse(httpExchange, 200, jsonRes);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     private Learner getLearnEntity(String pieceName) {
-        if (this.currLearn == null) {
-            System.out.println("create");
-            this.currLearn = new Learner(pieceName, persistence);
-        } else if (!this.currLearn.getPieceName().equals(pieceName)) {
-            System.out.println("new");
-            this.currLearn.finishLearn();
-            this.currLearn.setNewPiece(pieceName); // todo new entity ??
-        } else {
-            System.out.println("old");
+        Optional<Learner> found = learners.stream().filter(l -> l.getPieceName().equals(pieceName)).findAny();
+
+        if (found.isPresent()) {
+            return found.get();
         }
 
-        return this.currLearn;
+        Learner newLearner = new Learner(pieceName, persistence);
+        learners.add(newLearner);
+        return newLearner;
     }
 
     private String validateRequest(HttpExchange httpExchange) {
@@ -79,16 +77,6 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
 
         if (!method.equals("POST")) {
             return "method not accepted";
-        }
-
-        return null;
-    }
-
-    private String validatePieceName(String pieceName) {
-        if (pieceName == null) {
-            return "Piece name is required";
-        } else if (pieceName.length() < 2) {
-            return "Piece name should be at least 2 symbols long";
         }
 
         return null;

@@ -7,24 +7,30 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class RecognizeHandler extends RequestHandler implements HttpHandler {
     Recognizer recognizer;
     Recognizer prevRecognizer;
 
+    private static final int MIN_TRACK_SIZE = 10;
+
     RecognizeHandler(Persistence p) {
         super(p);
     }
 
-    private String resultToJson(Recognizer.Result result) {
-        HashMap<String, Object> obj = new HashMap<>();
+    private String resultToJson(List<Recognizer.Result> result) {
+        String resString = "[" + result.stream().map(res ->
+                "{\"name\": \"" + res.pieceName + "\", \"precision\": " + res.precision + "}").collect(Collectors.joining(","))
+                + "]";
 
-        String resString = result.pieceName == null ? "null" :
-                "{\"name\": \"" + result.pieceName + "\", \"precision\": " + result.precision + "}";
-        String successString = result.precision > 0 ? "\"true\"" : "\"false\"";
-        return "{\"result\": " + resString + ", \"isSuccess\": " + successString + "}";
+        return "{\"results\": " + resString + ", \"isSuccess\": true}";
+    }
+
+    private boolean isCorrectionRequest(HttpExchange httpExchange) {
+        return httpExchange.getRequestURI().toString().contains("correct");
     }
 
     @Override
@@ -43,7 +49,21 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
 
         if (error != null) {
             log("error", error);
-            handleResponse(httpExchange, getErrorString(error));
+            handleResponse(httpExchange, 400, getErrorString(error));
+            return;
+        }
+
+        if (isCorrectionRequest(httpExchange)) {
+            String pieceName = getURIParameters(httpExchange).get(PIECE_NAME_PROPERTY);
+            String nameErr = validatePieceName(pieceName);
+
+            if (nameErr != null) {
+                handleResponse(httpExchange, 200, getErrorString(nameErr));
+                return;
+            }
+
+            recognizer.makeCorrection(pieceName);
+            handleResponse(httpExchange, 200, "{\"isSuccess\": true}");
             return;
         }
 
@@ -53,18 +73,30 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
 
         } else {
             try {
-                String pathToFile = downloadRecording(httpExchange.getRequestBody());
-                ChordSeq track = getTrackFromAudioInput(pathToFile);
-                updateRecognizeEntity(false);
+                ChordSeq track = getTrackFromAudioInput(httpExchange);
+                List<Recognizer.Result> result = new ArrayList<>();
 
-                List<Recognizer.Result> result = this.recognizer.process(track);
-                handleResponse(httpExchange, resultToJson(result.get(0)));
+                if (track.chords.size() >= MIN_TRACK_SIZE) {
+                    updateRecognizeEntity(false);
+                    result = this.recognizer.process(track);
+                }
+
+                if (result.isEmpty()) {
+                    handleResponse(httpExchange, 200,
+                            "{\"message\": \"Not enough sounds recorded, please check your microphone\", \"isSuccess\": false}");
+                    return;
+                }
+
+                System.out.println(result);
+
+                handleResponse(httpExchange, 200, resultToJson(result));
+                return;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        handleResponse(httpExchange, jsonRes);
+        handleResponse(httpExchange, 200, jsonRes);
     }
 
     private void updateRecognizeEntity(boolean mightNeedNew) {
@@ -79,8 +111,8 @@ public class RecognizeHandler extends RequestHandler implements HttpHandler {
 
     private String validateRequest(HttpExchange httpExchange) {
         String method = httpExchange.getRequestMethod();
-        if (!method.equals("POST") && !method.equals("OPTIONS")) {
-            return "method not accepted";
+        if (!method.equals("POST")) {
+            return "method not allowed";
         }
 
         return null;

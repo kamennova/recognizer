@@ -1,4 +1,5 @@
-import com.kamennova.lala.MusicProcessor;
+package unit;
+
 import com.kamennova.lala.Learner;
 import com.kamennova.lala.MidiParser;
 import com.kamennova.lala.MusicUtils;

@@ -85,6 +85,10 @@ public class Recognizer extends MusicProcessor {
         super(persistence);
     }
 
+    public void makeCorrection(String pieceName){
+        // todo update
+    }
+
     public static class Result {
         public String pieceName;
         public Double precision;

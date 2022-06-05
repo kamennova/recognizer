@@ -1,3 +1,5 @@
+package unit;
+
 import com.kamennova.lala.MusicProcessor;
 import com.kamennova.lala.persistence.RedisPersistence;
 import org.junit.jupiter.api.AfterAll;
