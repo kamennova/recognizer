@@ -26,6 +26,11 @@ public class RedisPersistence implements Persistence {
     }
 
     @Override
+    public long getLearnedNum() {
+        return jedis.scard(PIECE_SET);
+    }
+
+    @Override
     public void addPiece(String name) {
         if (pieceExists(name)) {
             throw new RuntimeException("Piece with name " + name + " already exists");

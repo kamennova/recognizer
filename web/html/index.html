@@ -2,12 +2,20 @@
 <html>
 <head>
     <style>
+
+    * {
+    box-sizing: border-box;
+    }
     body {
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding: 40px 10px;
+
     text-align: center;
     position: relative;
+    margin: 0;
+    height: 100vh;
     }
 
     .flex {
@@ -21,7 +29,7 @@
     }
 
     .switcher-btn {
-        display: block;
+        display: none;
         padding: 0 28px;
         border: 3px solid grey;
         cursor: pointer;
@@ -80,8 +88,16 @@
 
         }
 
+h1 {
+font-weight: 400;
+}
+
         .audio-input {
-            width: 50%
+        align-items: center;
+justify-items: center;
+justify-content: center;
+            width: 50%;
+            margin: auto 0 10px;
         }
 
         .audio-input .col {
@@ -95,6 +111,83 @@
 
         }
 
+p {
+color: grey;
+font-size: 17px;
+margin: 0 20px 40px;
+}
+
+        .btn {
+background: white;
+border: 2px solid black;
+width: 100px;
+height: 100px;
+border-radius: 6px;
+transition: 0.2s linear all;
+        }
+
+        .btn:not(.disabled):hover {
+        cursor: pointer;
+        background: rgba(0, 0, 0, 0.06);
+        }
+
+        .btn.disabled {
+        background: rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 0, 0, 0.1);
+        }
+
+        .btn.disabled svg {
+        opacity: 0.15;
+        }
+
+        .input-label {
+        display: inline-block;
+        margin-bottom: 10px;
+        }
+
+        .switch-container {
+        position: relative;
+            width: 220px;
+            height: 100px;
+            border: 2px solid black;
+            border-radius: 60px;
+        }
+
+        .switch-indicator {
+            position: absolute;
+            left: 0;
+            top: 0;
+            margin-top: 6px;
+            margin-left: 6px;
+            width: 96px;
+            height: 84px;
+            background: #2d2d2d;
+            border-radius: 42px;
+            box-shadow: 0 -2px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+        }
+
+        .switch-label {
+        padding: 0 15px;
+        width: 110px;
+        font-size: 22px;
+        font-weight: 600;
+        }
+
+        .switch-indicator .icon {
+        margin-top: 22px;
+        margin-left: 26px;
+        width: 35px;
+<!--        height: 30px;-->
+        }
+
+        .container.disabled {
+        opacity: 0.2
+        }
 
 
     </style>
@@ -102,16 +195,38 @@
 <body>
 
 <h1>Music practice</h1>
+<p>Currently in database: <span id="learned-num">10</span> music pieces</p>
 
 <div class="switcher">
+
+    <div class="container disabled">
+        <span class="switch-label">
+            Learn
+        </span>
+        <div class="switch-container">
+            <div class="switch-indicator">
+                <div class="icon learn">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" ><path fill="white" d="M36.55 41.15Q35.7 41.15 34.925 40.825Q34.15 40.5 33.5 39.85L22.35 28.6Q21.2 29 20.05 29.25Q18.9 29.5 17.7 29.5Q12.85 29.5 9.45 26.125Q6.05 22.75 6.05 17.9Q6.05 16.35 6.45 14.875Q6.85 13.4 7.6 12.1L14.85 19.35L19.45 15.05L12 7.6Q13.3 6.85 14.75 6.425Q16.2 6 17.7 6Q22.65 6 26.125 9.475Q29.6 12.95 29.6 17.9Q29.6 19.1 29.35 20.25Q29.1 21.4 28.7 22.55L39.75 33.6Q40.4 34.25 40.725 35.075Q41.05 35.9 41.05 36.8Q41.05 37.7 40.7 38.525Q40.35 39.35 39.65 39.95Q38.95 40.55 38.175 40.85Q37.4 41.15 36.55 41.15ZM35.65 37.75Q36.05 38.15 36.65 38.15Q37.25 38.15 37.65 37.75Q38.05 37.35 38.05 36.75Q38.05 36.15 37.65 35.75L25 23.1Q25.8 22.05 26.2 20.625Q26.6 19.2 26.6 17.9Q26.6 14.15 23.825 11.55Q21.05 8.95 17.5 8.9L22.55 14.05Q23 14.5 23 15.15Q23 15.8 22.55 16.25L15.95 22.45Q15.5 22.9 14.85 22.9Q14.2 22.9 13.75 22.45L8.9 17.65Q9.05 21.5 11.625 24Q14.2 26.5 17.7 26.5Q18.95 26.5 20.35 26.1Q21.75 25.7 22.8 24.9ZM23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Q23.55 23.6 23.55 23.6Z"/></svg>
+                </div>
+
+<!--                <div class="icon recognize">-->
+<!--                <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48"><path d="M14.6 22.7Q15.5 20.9 16.525 19.15Q17.55 17.4 18.7 15.8L14.75 15Q14.75 15 14.75 15Q14.75 15 14.75 15L9.3 20.45Q9.3 20.45 9.3 20.45Q9.3 20.45 9.3 20.45ZM40.35 7.1Q35.25 7.35 31.15 9.275Q27.05 11.2 23.15 15.1Q21.6 16.65 19.95 19.15Q18.3 21.65 17 24.5Q17 24.5 17 24.5Q17 24.5 17 24.5L23.65 31.15Q23.65 31.15 23.65 31.15Q23.65 31.15 23.65 31.15Q26.5 29.85 29 28.2Q31.5 26.55 33.05 25Q36.95 21.1 38.875 17.025Q40.8 12.95 41.05 7.85Q41.05 7.7 41 7.55Q40.95 7.4 40.85 7.3Q40.75 7.2 40.625 7.15Q40.5 7.1 40.35 7.1ZM28.5 19.7Q27.5 18.7 27.5 17.225Q27.5 15.75 28.5 14.75Q29.5 13.75 30.975 13.75Q32.45 13.75 33.45 14.75Q34.45 15.75 34.45 17.225Q34.45 18.7 33.45 19.7Q32.45 20.7 30.975 20.7Q29.5 20.7 28.5 19.7ZM25.45 33.6 27.7 38.85Q27.7 38.85 27.7 38.85Q27.7 38.85 27.7 38.85L33.15 33.4Q33.15 33.4 33.15 33.4Q33.15 33.4 33.15 33.4L32.4 29.45Q30.8 30.6 29.025 31.65Q27.25 32.7 25.45 33.6ZM44.1 5.65Q44.25 11.9 42.075 17.175Q39.9 22.45 35.2 27.15Q35.15 27.2 35.1 27.225Q35.05 27.25 35 27.3L36.1 32.8Q36.25 33.55 36.05 34.25Q35.85 34.95 35.3 35.5L28.25 42.55Q27.7 43.1 26.925 42.95Q26.15 42.8 25.85 42.05L22.45 34.2L14 25.7L6.1 22.35Q5.35 22.05 5.225 21.25Q5.1 20.45 5.65 19.9L12.65 12.9Q13.2 12.35 13.9 12.125Q14.6 11.9 15.35 12.05L20.85 13.15Q20.9 13.1 20.95 13.075Q21 13.05 21.05 13Q25.75 8.3 31 6.125Q36.25 3.95 42.5 4.1Q42.8 4.1 43.075 4.225Q43.35 4.35 43.6 4.6Q43.85 4.85 43.975 5.1Q44.1 5.35 44.1 5.65ZM7.45 31.75Q9.2 30 11.725 29.975Q14.25 29.95 16 31.7Q17.75 33.45 17.725 35.975Q17.7 38.5 15.95 40.25Q14.65 41.55 11.925 42.4Q9.2 43.25 3.75 44Q4.5 38.55 5.325 35.8Q6.15 33.05 7.45 31.75ZM9.55 33.9Q8.85 34.65 8.3 36.25Q7.75 37.85 7.35 40.35Q9.85 39.95 11.45 39.4Q13.05 38.85 13.8 38.15Q14.75 37.3 14.775 36.025Q14.8 34.75 13.9 33.8Q12.95 32.9 11.675 32.925Q10.4 32.95 9.55 33.9Z"/></svg>-->
+<!--                </div>-->
+            </div>
+        </div>
+
+        <span class="switch-label">
+            Recognize
+        </span>
+    </div>
+
     <button class="switcher-btn" id="btn-learn">Learn</button>
     <button class="switcher-btn" id="btn-recognize">Recognize</button>
 </div>
 
 <section class="audio-input flex">
-    <div class="col recorder-input">
-        <span class="input-label">Start playing</span>
-
+    <div class=" recorder-input">
+        <span class="input-label">Session controls</span>
 
         <div class="session-buttons">
             <button class="btn btn-start" id="btn-start">
@@ -119,12 +234,12 @@
                     <path d="M19.15 18.25V29.75Q19.15 30.65 19.925 31.1Q20.7 31.55 21.45 31.05L30.5 25.25Q31.2 24.8 31.2 24Q31.2 23.2 30.5 22.75L21.45 16.95Q20.7 16.45 19.925 16.9Q19.15 17.35 19.15 18.25ZM24 44Q19.9 44 16.25 42.425Q12.6 40.85 9.875 38.125Q7.15 35.4 5.575 31.75Q4 28.1 4 24Q4 19.9 5.575 16.25Q7.15 12.6 9.875 9.875Q12.6 7.15 16.25 5.575Q19.9 4 24 4Q28.1 4 31.75 5.575Q35.4 7.15 38.125 9.875Q40.85 12.6 42.425 16.25Q44 19.9 44 24Q44 28.1 42.425 31.75Q40.85 35.4 38.125 38.125Q35.4 40.85 31.75 42.425Q28.1 44 24 44ZM24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24ZM24 41Q31 41 36 36Q41 31 41 24Q41 17 36 12Q31 7 24 7Q17 7 12 12Q7 17 7 24Q7 31 12 36Q17 41 24 41Z"></path>
                 </svg>
             </button>
-            <button class="btn btn-pause" id="btn-pause">
+            <button class="btn btn-pause disabled" id="btn-pause">
                 <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48">
                     <path d="M29.25 38Q28 38 27.125 37.125Q26.25 36.25 26.25 35V13Q26.25 11.75 27.125 10.875Q28 10 29.25 10H35Q36.25 10 37.125 10.875Q38 11.75 38 13V35Q38 36.25 37.125 37.125Q36.25 38 35 38ZM13 38Q11.75 38 10.875 37.125Q10 36.25 10 35V13Q10 11.75 10.875 10.875Q11.75 10 13 10H18.75Q20 10 20.875 10.875Q21.75 11.75 21.75 13V35Q21.75 36.25 20.875 37.125Q20 38 18.75 38ZM29.25 35H35V13H29.25ZM13 35H18.75V13H13ZM13 13V35ZM29.25 13V35Z"></path>
                 </svg>
             </button>
-            <button class="btn btn-stop" id="btn-stop">
+            <button class="btn btn-stop disabled" id="btn-stop">
                 <svg xmlns="http://www.w3.org/2000/svg" height="48" width="48">
                     <path d="M24 44Q19.75 44 16.1 42.475Q12.45 40.95 9.75 38.25Q7.05 35.55 5.525 31.9Q4 28.25 4 24Q4 19.8 5.525 16.15Q7.05 12.5 9.75 9.8Q12.45 7.1 16.1 5.55Q19.75 4 24 4Q28.2 4 31.85 5.55Q35.5 7.1 38.2 9.8Q40.9 12.5 42.45 16.15Q44 19.8 44 24Q44 28.25 42.45 31.9Q40.9 35.55 38.2 38.25Q35.5 40.95 31.85 42.475Q28.2 44 24 44ZM24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24Q24 24 24 24ZM24 41Q31.25 41 36.125 36.125Q41 31.25 41 24Q41 16.75 36.125 11.875Q31.25 7 24 7Q16.75 7 11.875 11.875Q7 16.75 7 24Q7 31.25 11.875 36.125Q16.75 41 24 41ZM18 31.5H30Q30.65 31.5 31.075 31.075Q31.5 30.65 31.5 30V18Q31.5 17.35 31.075 16.925Q30.65 16.5 30 16.5H18Q17.35 16.5 16.925 16.925Q16.5 17.35 16.5 18V30Q16.5 30.65 16.925 31.075Q17.35 31.5 18 31.5Z"></path>
                 </svg>
@@ -133,7 +248,7 @@
 
     </div>
 
-    <div class="col">
+    <div class="col hidden">
         <span>Upload recording</span>
         <form enctype="multipart/form-data" action="/upload/image" method="post">
             <input id="image-file" type="file"/>

@@ -20,12 +20,10 @@ public class APITests {
 
     @Test
     public void testEndpointPathAndMethodValidation() throws IOException {
-        HttpUriRequest request = new HttpGet(API_PATH + "alala");
-        CloseableHttpResponse response = client.execute(request);
-
+        CloseableHttpResponse responseWrongPath = client.execute( new HttpGet(API_PATH + "alala"));
         CloseableHttpResponse responseWrongMethod = client.execute(new HttpPatch(API_PATH + "learn"));
 
-        assertThat(response.getStatusLine().getStatusCode()).isEqualTo(404);
+        assertThat(responseWrongPath.getStatusLine().getStatusCode()).isEqualTo(404);
         assertThat(responseWrongMethod.getStatusLine().getStatusCode()).isEqualTo(400);
     }
 
@@ -118,6 +116,8 @@ public class APITests {
 
         res = client.execute(new HttpPost(API_PATH + "recognize/correct?pieceName=bright_eyes"));
         assertThat(res.getStatusLine().getStatusCode()).isEqualTo(200);
+
+        // todo check coorection
     }
 
     private void attachFile(HttpPost req, String path) {

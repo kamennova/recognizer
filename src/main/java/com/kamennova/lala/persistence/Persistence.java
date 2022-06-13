@@ -14,4 +14,6 @@ public interface Persistence {
     void clearAll();
 
     boolean pieceExists(String name);
+
+    long getLearnedNum();
 }
