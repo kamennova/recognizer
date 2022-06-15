@@ -23,6 +23,14 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*"); // todo
+
+        if (httpExchange.getRequestMethod().equalsIgnoreCase("OPTIONS")) {
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Methods", "POST, OPTIONS");
+            httpExchange.getResponseHeaders().add("Access-Control-Allow-Headers", "Content-Type,Authorization");
+            httpExchange.sendResponseHeaders(204, -1);
+            return;
+        }
+
         String error = validateRequest(httpExchange);
 
         if (error != null) {
@@ -39,6 +47,7 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         }
 
         this.currPieceName = pieceName;
+        System.out.println(pieceName);
         Learner learnEntity = getLearnEntity(currPieceName);
 
         try {

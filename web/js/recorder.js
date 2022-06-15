@@ -1,95 +1,72 @@
 URL = window.URL || window.webkitURL;
 
-var gumStream; 						//stream from getUserMedia()
-var recorder; 						//WebAudioRecorder object
-var input; 							//MediaStreamAudioSourceNode  we'll be recording
-const encodingType = "mp3"; 					//holds selected encoding for resulting audio (file)
-var encodeAfterRecord = true;       // when to encode
+let gumStream;
+let recorder;
+let input;
+const encodeAfterRecord = true;
 
-var AudioContext = window.AudioContext || window.webkitAudioContext;
-var audioContext; //new audio context to help us record
+const AudioContext = window.AudioContext || window.webkitAudioContext;
+let audioContext;
 
+const startRecording = (onComplete) => {
+    console.log("startRecording() called");
 
-var recordButton = document.getElementById("btn-start");
-var stopButton = document.getElementById("btn-stop");
+    navigator.mediaDevices.getUserMedia({audio: true, video: false}).then((stream) => {
+        __log("getUserMedia() success, stream created, initializing WebAudioRecorder...");
 
-//add events to those 2 buttons
-recordButton.addEventListener("click", startRecording);
-stopButton.addEventListener("click", stopRecording);
+        audioContext = new AudioContext();
+        gumStream = stream;
+        input = audioContext.createMediaStreamSource(stream);
 
-function startRecording() {
-	console.log("startRecording() called");
-    var constraints = { audio: true, video:false }
-    navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
-		__log("getUserMedia() success, stream created, initializing WebAudioRecorder...");
+        //stop the input from playing back through the speakers
+        //input.connect(audioContext.destination)
 
-		audioContext = new AudioContext();
-		console.log("Format: 2 channel @ "+audioContext.sampleRate/1000+"kHz")
-		gumStream = stream;
-		input = audioContext.createMediaStreamSource(stream);
+        recorder = new WebAudioRecorder(input, {
+            workerDir: "../recorder-lib/web-audio-recorder-js/lib-minified/",
+            encoding: "mp3",
+            numChannels: 2,
+            onEncoderLoading: function (recorder, encoding) {
+                __log("Loading " + encoding + " encoder...");
+            },
+            onEncoderLoaded: function (recorder, encoding) {
+                // hide "loading encoder..." display
+                __log(encoding + " encoder loaded");
+            }
+        });
 
-		//stop the input from playing back through the speakers
-		//input.connect(audioContext.destination)
+        recorder.onComplete = (recorder, blob) => onComplete(blob);
 
-		recorder = new WebAudioRecorder(input, {
-		  workerDir: "../recorder-lib/web-audio-recorder-js/lib-minified/", // must end with slash
-		  encoding: "mp3",
-		  numChannels:2, //2 is the default, mp3 encoding supports only 2
-		  onEncoderLoading: function(recorder, encoding) {
-		    __log("Loading "+encoding+" encoder...");
-		  },
-		  onEncoderLoaded: function(recorder, encoding) {
-		    // hide "loading encoder..." display
-		    __log(encoding+" encoder loaded");
-		  }
-		});
+        recorder.setOptions({
+            timeLimit: 120,
+            encodeAfterRecord: encodeAfterRecord,
+            ogg: {quality: 0.5},
+            mp3: {bitRate: 160}
+        });
 
-		recorder.onComplete = function(recorder, blob) {
-			__log("Encoding complete");
-            sendRecording(blob);
-			createDownloadLink(blob,recorder.encoding);
-		}
+        recorder.startRecording();
 
-		recorder.setOptions({
-		  timeLimit:120,
-		  encodeAfterRecord:encodeAfterRecord,
-	      ogg: {quality: 0.5},
-	      mp3: {bitRate: 160}
-	    });
+        __log("Recording started");
 
-		recorder.startRecording();
+    }).catch(function (err) {
+        console.log(err);
+    });
+};
 
-		 __log("Recording started");
+const stopRecording = () => {
+    console.log("stopRecording() called");
+    gumStream.getAudioTracks()[ 0 ].stop();
+    recorder.finishRecording();
 
-	}).catch(function(err) {
-	console.log(err);
-	  	//enable the record button if getUSerMedia() fails
-    	recordButton.disabled = false;
-    	stopButton.disabled = true;
+    __log('Recording stopped');
+};
 
-	});
-
-	//disable the record button
-    recordButton.disabled = true;
-    stopButton.disabled = false;
+function createDownloadLink(blob, encoding) {
+    const url = URL.createObjectURL(blob);
+    console.log(url);
 }
 
-function stopRecording() {
-	console.log("stopRecording() called");
-	gumStream.getAudioTracks()[0].stop();
-	stopButton.disabled = true;
-	recordButton.disabled = false;
-	recorder.finishRecording();
-
-	__log('Recording stopped');
-}
-
-function createDownloadLink(blob,encoding) {
-	var url = URL.createObjectURL(blob);
-	console.log(url);
-}
-
-//helper function
 function __log(e, data) {
-	console.log(e, data)
+    // console.log(e, data)
 }
+
+// createDownloadLink(blob, recorder.encoding);
