@@ -3,8 +3,13 @@ package unit;
 import com.kamennova.lala.MusicUtils;
 import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.common.Note;
+import com.kamennova.lala.endpoint.RequestHandler;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 import java.util.Arrays;
@@ -72,5 +77,30 @@ public class MusicUtilsTest {
                 Set.of(new Note(0, 0)),
                 Set.of(new Note(1, 0))
         ).stream().map(notes -> notes.iterator().next().interval).collect(Collectors.toList()));
+    }
+
+    @Test
+    public void getDownloadPath() throws IOException {
+        Assertions.assertEquals(RequestHandler.getDownloadFilePath(), "src/main/resources/upload/recording0.mp3");
+        ;
+
+        File file = new File("src/main/resources/upload/recording0.mp3");
+        file.createNewFile();
+
+        Assertions.assertEquals(RequestHandler.getDownloadFilePath(), "src/main/resources/upload/recording1.mp3");
+
+        file = new File("src/main/resources/upload/recording4.mp3");
+        file.createNewFile();
+        Assertions.assertEquals(RequestHandler.getDownloadFilePath(), "src/main/resources/upload/recording5.mp3");
+
+        file.delete();
+        Assertions.assertEquals(RequestHandler.getDownloadFilePath(), "src/main/resources/upload/recording1.mp3");
+    }
+
+    @AfterAll
+    public static void deleteAll() {
+        new File("src/main/resources/upload/recording0.mp3").delete();
+        new File("src/main/resources/upload/recording5.mp3").delete();
+        new File("src/main/resources/upload/recording2.mp3").delete();
     }
 }

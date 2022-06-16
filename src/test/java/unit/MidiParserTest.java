@@ -64,7 +64,6 @@ public class MidiParserTest {
         IntStream.range(0, expectedChords.size()).forEach(i ->
                 assertThat(expectedChords.get(i)).containsExactlyInAnyOrderElementsOf(track.chords.get(i))
         );
-
     }
 
     @Test

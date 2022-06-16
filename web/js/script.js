@@ -10,7 +10,11 @@ const STATE = {
     currMode: MODES.LEARN,
     learn: {
         pieceName: null,
-        lastResult: null
+        lastResult: null,
+        processing: [],
+    },
+    recognize: {
+        processing: [],
     },
     session: SESSION_STATE.OVER,
 };
@@ -29,7 +33,7 @@ const sendLearnRecording = (blob, pieceName) => {
         .then(res => res.json())
         .then(res => {
             console.log(new Date());
-            processLearnRes(res);
+            processLearnRes(res, pieceName);
         });
 };
 
@@ -69,6 +73,10 @@ const noResultsMsg = document.getElementById("no-results-msg");
 const correctionBtn = document.getElementById("btn-correct");
 const pieceNameInput = document.getElementById("piece-name-input");
 const correctionPopup = document.getElementById("popup-correct");
+const statusLine = document.getElementById("status");
+const recordingStatus = document.getElementById("recording");
+const processingStatus = document.getElementById("processing");
+const sessionInfo = document.getElementById("session-info");
 
 const disable = (elem) => elem.classList.add("disabled");
 const enable = (elem) => elem.classList.remove("disabled");
@@ -105,18 +113,34 @@ const processRecognizeRes = (res) => {
         if (res.message !== undefined) {
             noResultsMsg.innerText = res.message;
         } else {
-            noResultsMsg.innerText = "An unexpected error occured";
+            // No pieces where recognized. Try playing this piece in learn mode again
+            noResultsMsg.innerText = "An unexpected error occurred";
         }
 
         show(noResultsMsg);
     }
+
+    if (STATE.currMode === MODES.RECOGNIZE){
+        STATE.recognize.processing.pop();
+        if (STATE.recognize.processing.length === 0) {
+            hide(processingStatus);
+        }
+    }
 };
 
-const processLearnRes = (res) => {
+const processLearnRes = (res, pieceName) => {
     console.log(res);
-    if (STATE.learn.lastResult === null || STATE.learn.lastResult.level < LEARN_LEVEL_MIN) {
-        show()
+    if (STATE.currMode === MODES.LEARN && STATE.learn.pieceName === pieceName) {
+        STATE.learn.processing.pop();
+        if (STATE.learn.processing.length === 0) {
+            hide(processingStatus);
+        }
+
+        if (STATE.learn.lastResult === null || STATE.learn.lastResult.level < LEARN_LEVEL_MIN) {
+            // show()
+        }
     }
+
 };
 
 
@@ -124,7 +148,11 @@ const processLearnRes = (res) => {
 
 const startRecognize = () => {
     updateSessionState(SESSION_STATE.ON);
-    startIntervalRecording(15000, (blob) => sendRecognizeRecording(blob));
+    startIntervalRecording(15000, (blob) => {
+        show(processingStatus);
+        STATE.recognize.processing.unshift(new Date());
+        sendRecognizeRecording(blob);
+    });
 };
 
 document.getElementById("correct-cancel").addEventListener("click", () => hide(correctionPopup));
@@ -147,7 +175,11 @@ const startLearn = (pieceName) => {
     console.log("start learn");
     updateSessionState(SESSION_STATE.ON);
     updateLearnPieceName(pieceName);
-    startIntervalRecording(15000, (blob) => sendLearnRecording(blob, pieceName));
+    startIntervalRecording(15000, (blob) => {
+        show(processingStatus);
+        STATE.learn.processing.unshift(new Date());
+        sendLearnRecording(blob, pieceName);
+    });
 };
 
 const validatePieceName = (pieceName) => {
@@ -187,6 +219,7 @@ const stopSession = () => {
 
 const pauseSession = () => {
     updateSessionState(SESSION_STATE.PAUSED);
+    hide(recordingStatus);
     stopIntervalRecording();
 };
 
@@ -250,6 +283,8 @@ const updateSessionState = (state) => {
             disable(startBtn);
             enable(pauseBtn);
             enable(stopBtn);
+            hide(processingStatus);
+            show(sessionInfo);
             break;
         case SESSION_STATE.OVER:
             disable(pauseBtn);
@@ -282,15 +317,14 @@ const updateMode = (mode) => {
 };
 
 modeSwitch.addEventListener("click", () => {
-    if (STATE.session === SESSION_STATE.ON) {
+    const shouldRestart = STATE.session === SESSION_STATE.ON;
+    if (shouldRestart) {
         pauseSession();
     }
     updateMode(STATE.currMode === MODES.LEARN ? MODES.RECOGNIZE : MODES.LEARN);
 
-    if (STATE.currMode === MODES.LEARN) {
-
-    } else {
-
+    if (shouldRestart) {
+        startSession();
     }
 });
 

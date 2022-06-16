@@ -38,16 +38,8 @@ public class Learner extends MusicProcessor {
         return commonSeqCount < 3 ? 0 : (int) Math.min(commonSeqCount, 10);
     }
 
-    public void finishLearn() {
-        this.persistence.addPiece(this.pieceName);
-        this.persistSequences(store3);
-        this.persistSequences(store4);
-        this.persistSequences(store5);
-    }
-
-    private void persistSequences(Map<List<Integer>, Integer> store) {
-        List<List<Integer>> best = getSequencesToPersist(store);
-        best.forEach(seq -> this.persistence.addPattern(pieceName, MusicProcessor.getPatternString(seq)));
+    public void finishLearn(){
+        this.persist(pieceName);
     }
 
     private void clear() {

@@ -7,10 +7,8 @@ import com.kamennova.lala.common.ChordSeq;
 import com.kamennova.lala.persistence.Persistence;
 import com.sun.net.httpserver.HttpExchange;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,12 +35,27 @@ public class RequestHandler {
         return null;
     }
 
-    private String getDownloadFilePath() {
-        return "src/main/resources/upload.mp3";
+    private static int getFileIndex(String path) {
+        File[] uploadedFiles = new File(path).listFiles();
+        Arrays.sort(uploadedFiles);
+        int lastIndex = -1;
+        if (uploadedFiles.length > 0) {
+            String[] nameParts = uploadedFiles[uploadedFiles.length - 1].getName().split("\\.");
+            String name = nameParts[nameParts.length - 2];
+            lastIndex = Integer.parseInt(name.charAt(name.length() - 1) + "");
+        }
+
+        return lastIndex + 1;
+    }
+
+    public static String getDownloadFilePath() {
+        int index = getFileIndex("src/main/resources/upload");
+        return String.format("src/main/resources/upload/recording%s.mp3", index);
     }
 
     private String getMidiFilePath() {
-        return "src/main/resources/upload.mid";
+        int index = getFileIndex("src/main/resources/transcribed");
+        return String.format("src/main/resources/transcribed/recording%s.mid", index);
     }
 
     protected String downloadRecording(InputStream body) throws IOException {

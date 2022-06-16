@@ -20,6 +20,10 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
         super(p);
     }
 
+    private boolean isFinishRequest(){
+        return true; // todo
+    }
+
     @Override
     public void handle(HttpExchange httpExchange) throws IOException {
         httpExchange.getResponseHeaders().add("Access-Control-Allow-Origin", "*"); // todo
@@ -66,6 +70,7 @@ public class LearnHandler extends RequestHandler implements HttpHandler {
             handleResponse(httpExchange, 200, jsonRes);
         } catch (Exception e) {
             e.printStackTrace();
+            handleResponse(httpExchange, 400, getErrorString("An unexpected error occurred: " + e.getMessage()));
         }
     }
 

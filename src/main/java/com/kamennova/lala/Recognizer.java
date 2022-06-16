@@ -86,7 +86,7 @@ public class Recognizer extends MusicProcessor {
     }
 
     public void makeCorrection(String pieceName){
-        // todo update
+        this.persist(pieceName);
     }
 
     public static class Result {

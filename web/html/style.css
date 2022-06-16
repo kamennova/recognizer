@@ -96,6 +96,10 @@ input[type=text] {
     width: 100%;
 }
 
+.status {
+    color: black;
+}
+
 h1 {
     font-weight: 400;
     margin-bottom: 15px;

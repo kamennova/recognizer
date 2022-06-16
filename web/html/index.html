@@ -41,18 +41,18 @@
   <button class="switcher-btn" id="btn-recognize">Recognize</button>
 </div>
 
-<div class="info-container">
+<div class="info-container hidden" id="session-info">
+  <p class="status" id="status"><span id="recording">Recording...</span><span id="processing">Processing...</span></p>
+
   <div class="recognize">
-    Recognizing...
-  </div>
+    <div class="results hidden" id="recognize-results">
+      <ul class="results-list hidden" id="results-list">
+      </ul>
+      <button class="link-btn" id="btn-correct">Submit correction</button>
+    </div>
 
-  <div class="results hidden" id="recognize-results">
-    <ul class="results-list hidden" id="results-list">
-    </ul>
-    <button class="link-btn" id="btn-correct">Submit correction</button>
+    <span class="hidden" id="no-results-msg"></span>
   </div>
-
-  <span class="hidden" id="no-results-msg">No pieces where recognized. Try playing this piece in learn mode again</span>
 
 
 </div>

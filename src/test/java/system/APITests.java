@@ -1,6 +1,9 @@
 package system;
 
-import org.apache.http.client.methods.*;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -53,7 +56,7 @@ public class APITests {
 
     @Test
     public void testTeachExistingMusicPiece_success() throws IOException {  // todo
-        HttpPost req = new HttpPost(API_PATH + "learn?pieceName=bright_eyes");
+        HttpPost req = new HttpPost(API_PATH + "learn?pieceName=updateTest");
         attachFile(req, "src/test/resources/performance/cut/bright_eyes-tmp1.mp3");
 
         CloseableHttpResponse res = client.execute(req);
@@ -113,11 +116,41 @@ public class APITests {
         res = client.execute(new HttpPost(API_PATH + "recognize/correct?pieceName=a"));
         assertThat(res.getStatusLine().getStatusCode()).isEqualTo(400);
         assertThat(EntityUtils.toString(res.getEntity())).contains("Piece name should be at least 2 symbols long");
+    }
 
-        res = client.execute(new HttpPost(API_PATH + "recognize/correct?pieceName=bright_eyes"));
+    @Test
+    public void testTeachMusicPiece_correctionSuccess() throws IOException {
+        // learn piece under wrong name
+        HttpPost req = new HttpPost(API_PATH + "learn?pieceName=correctTest");
+        attachFile(req, "src/test/resources/performance/cut/7-rings-ariana-grande-piano-cover-sheet-music-tmp1.mp3");
+        CloseableHttpResponse res = client.execute(req);
         assertThat(res.getStatusLine().getStatusCode()).isEqualTo(200);
 
-        // todo check coorection
+        // recognize
+        req = new HttpPost(API_PATH + "recognize");
+        attachFile(req, "src/test/resources/performance/cut/7-rings-ariana-grande-piano-cover-sheet-music-tmp1.mp3");
+        res = client.execute(req);
+        String message = EntityUtils.toString(res.getEntity());
+        assertThat(message).contains("correctTest");
+
+        // correct
+        res = client.execute(new HttpPost(API_PATH + "recognize/correct?pieceName=7-rings"));
+        assertThat(res.getStatusLine().getStatusCode()).isEqualTo(200);
+
+        // check corrected
+        res = client.execute(req);
+        message = EntityUtils.toString(res.getEntity());
+        assertThat(message).contains("7-rings");
+    }
+
+    @Test
+    public void testCrash() throws IOException {
+        HttpPost req = new HttpPost(API_PATH + "learn?pieceName=correctTest");
+        attachFile(req, "src/test/resources/performance/cut/7-rings-ariana-grande-piano-cover-sheet-music-tmp2.mp3");
+        CloseableHttpResponse res = client.execute(req);
+        assertThat(res.getStatusLine().getStatusCode()).isEqualTo(400);
+        String message = EntityUtils.toString(res.getEntity());
+        assertThat(message).contains("An unexpected error occurred");
     }
 
     private void attachFile(HttpPost req, String path) {

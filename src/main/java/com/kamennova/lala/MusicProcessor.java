@@ -268,4 +268,18 @@ public class MusicProcessor {
         System.out.println(str);
         System.out.println(obj);
     }
+
+    public void persist(String pieceName) {
+        if (!persistence.pieceExists(pieceName)) {
+            this.persistence.addPiece(pieceName);
+        }
+        this.persistSequences(store3, pieceName);
+        this.persistSequences(store4, pieceName);
+        this.persistSequences(store5, pieceName);
+    }
+
+    private void persistSequences(Map<List<Integer>, Integer> store, String pieceName) {
+        List<List<Integer>> best = getSequencesToPersist(store);
+        best.forEach(seq -> this.persistence.addPattern(pieceName, MusicProcessor.getPatternString(seq)));
+    }
 }
